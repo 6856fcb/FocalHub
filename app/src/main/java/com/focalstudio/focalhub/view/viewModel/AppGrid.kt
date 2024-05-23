@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.focalstudio.focalhub.data.model.App
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 
@@ -60,11 +61,12 @@ fun AppItem(app: App, context: Context, isVibrationEnabled: Boolean, provideFeed
             contentDescription = app.name,
             modifier = Modifier
                 .size(54.dp)
-                .background(color = Color.LightGray, shape = androidx.compose.foundation.shape.CircleShape) // For ripple effect
+                .background(color = Color.White, shape = androidx.compose.foundation.shape.CircleShape) // For ripple effect
                 .padding(0.dp)
         )
         Text(
             text = app.name,
+            fontSize = 12.sp,
             modifier = Modifier.padding(top = 4.dp)
         )
     }

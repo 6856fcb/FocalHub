@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.focalstudio.focalhub.filtering.filterFreeTime
 
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -32,6 +33,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     private fun loadApps() {
         viewModelScope.launch {
+
+            // only for testing purpose
+            val test = true;
+
+
+
             val pm: PackageManager = getApplication<Application>().packageManager
             val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
                 addCategory(Intent.CATEGORY_LAUNCHER)
@@ -44,7 +51,23 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                         icon = resolveInfo.loadIcon(pm)
                     )
                 }
-            _appsList.update { apps }
+            val filteredApps = apps.filter { app ->
+                val filterBy: String = "";
+                filterFreeTime.contains(app.packageName)
+
+            }
+
+            // instead of "test", we should implement a way where the user can set this parameter and accordingly
+            // set the filtered apps
+            _appsList.update {
+
+                // set to "test" instead of "!test" to only see the filtered apps
+                if (!test) {
+                    filteredApps
+                } else {
+                    apps
+                }
+            }
         }
     }
 
