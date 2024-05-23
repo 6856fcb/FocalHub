@@ -20,18 +20,22 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         loadApps()
     }
 
+
     private fun loadApps() {
-        viewModelScope.launch {
-            val pm: PackageManager = getApplication<Application>().packageManager
-            val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-                .map { appInfo ->
-                    App(
-                        name = appInfo.loadLabel(pm).toString(),
-                        packageName = appInfo.packageName,
-                        icon = appInfo.loadIcon(pm)
-                    )
-                }
-            _appsList.update { apps }
-        }
+            viewModelScope.launch {
+                val pm: PackageManager = getApplication<Application>().packageManager
+                val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+                    .filter { appInfo ->
+                        appInfo.packageName == "com.google.android.youtube" || appInfo.packageName == "com.google.android.googlequicksearchbox" || appInfo.packageName == "com.android.vending"
+                    }
+                    .map { appInfo ->
+                        App(
+                            name = appInfo.loadLabel(pm).toString(),
+                            packageName = appInfo.packageName,
+                            icon = appInfo.loadIcon(pm)
+                        )
+                    }
+                _appsList.update { apps }
+            }
     }
 }
