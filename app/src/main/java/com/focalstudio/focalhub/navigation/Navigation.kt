@@ -19,16 +19,16 @@ import com.focalstudio.focalhub.view.viewModel.SettingsViewModel
 @Composable
 fun Navigation(settingsViewModel: SettingsViewModel) {
     val navController = rememberNavController()
-    val launcherViewModel: HomeScreenViewModel = viewModel()
+    val homeScreenViewModel: HomeScreenViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = "mainScreen") {
         composable("mainScreen") {
-            val apps = launcherViewModel.appsList.collectAsState().value
+            val apps = homeScreenViewModel.appsList.collectAsState().value
             HomeScreen(
                 navController = navController,
                 apps = apps,
                 context = navController.context,
-                viewModel = launcherViewModel
+                viewModel = homeScreenViewModel
 
             )
         }

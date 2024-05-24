@@ -47,7 +47,7 @@ fun HomeScreen(navController: NavController, apps: List<App>, context: Context, 
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
             Text(
-                text = "Installed Apps",
+                text = "Apps",
                 fontSize = 20.sp,
                 modifier = Modifier.padding(16.dp)
             )
