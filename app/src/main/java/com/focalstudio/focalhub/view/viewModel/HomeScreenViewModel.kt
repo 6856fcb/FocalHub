@@ -63,28 +63,38 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
     private suspend fun applyDisplayRules(apps: List<App>): List<App> {
         val displayRules = ruleRepository.getRules()
         val currentTime = Calendar.getInstance().time
+        val currentDayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
         val filteredApps = mutableListOf<App>()
 
-        for (app in apps) {
-            var isAllowed = true
-            for (rule in displayRules) {
-                if (!rule.isActive) {
-                    continue
-                }
-
-                if ((rule.isBlacklist && rule.appList.contains(app.packageName)) || (!rule.isBlacklist && !rule.appList.contains(app.packageName))) {
-                    isAllowed = false
-                    break
-                }
-                //TODO More rule checking logic
+        for (rule in displayRules) {
+            // Check if the rule is within the specified time window and weekday
+            val ruleStartTime = rule.startTime
+            val ruleEndTime = rule.endTime
+            val ruleDaysOfWeek = rule.weekdays
+            if (!(currentTime.after(ruleStartTime) && currentTime.before(ruleEndTime) && ruleDaysOfWeek.contains(currentDayOfWeek))) {
+                rule.isActive = true
             }
 
-            if (isAllowed) {
-                filteredApps.add(app)
+            if (rule.isActive) {
+                for (app in apps) {
+                    var isAllowed = true
+
+                    // Blacklist active and app in List OR Whitelist active and app not present in List
+                    if ((rule.isBlacklist && rule.appList.contains(app.packageName)) ||
+                        (!rule.isBlacklist && !rule.appList.contains(app.packageName))
+                    ) {
+                        isAllowed = false
+                    }
+
+                    if (isAllowed) {
+                        filteredApps.add(app)
+                    }
+                }
             }
         }
-        return filteredApps
+        return filteredApps.distinct()
     }
+
 
 
     private fun isTimeWithinWindow(currentTime: Date, startTime: Date, endTime: Date): Boolean {
@@ -108,7 +118,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun AppIconClicked(app: App, context: Context) {
+    fun appIconClicked(app: App, context: Context) {
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         val vibrationEffect = VibrationEffect.createOneShot(10, VibrationEffect.DEFAULT_AMPLITUDE)
         vibrator.vibrate(vibrationEffect)

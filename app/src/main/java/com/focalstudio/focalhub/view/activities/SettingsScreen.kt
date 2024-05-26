@@ -1,4 +1,4 @@
-package com.focalstudio.focalhub.view.screens
+package com.focalstudio.focalhub.view.activities
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

@@ -82,7 +82,7 @@ fun AppItem(app: App, context: Context, viewModel: HomeScreenViewModel) {
             .width(64.dp)
             .clickable(
                 onClick = {
-                    viewModel.AppIconClicked(app, context)
+                    viewModel.appIconClicked(app, context)
                 }
             ),
         horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally

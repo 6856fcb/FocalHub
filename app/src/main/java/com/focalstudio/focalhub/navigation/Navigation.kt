@@ -9,7 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.focalstudio.focalhub.view.activities.CreateRuleScreen
-import com.focalstudio.focalhub.view.screens.SettingsScreen
+import com.focalstudio.focalhub.view.activities.SettingsScreen
 import com.focalstudio.focalhub.view.activities.ShowRulesScreen
 import com.focalstudio.focalhub.view.activities.HomeScreen
 import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel

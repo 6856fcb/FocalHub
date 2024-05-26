@@ -6,7 +6,7 @@ import java.util.*
 data class DisplayRule(
     val appList: List<String>,
     val isBlacklist: Boolean,
-    val isActive: Boolean,
+    var isActive: Boolean,
     val isRecurring: Boolean,
     val startTime: Date,
     val endTime: Date,
@@ -27,11 +27,8 @@ object DisplayRuleRepositoryProvider {
     }
 }
 
-// Dummy implementation of DisplayRuleRepository
 class DummyDisplayRuleRepository : DisplayRuleRepository {
     override suspend fun getRules(): List<DisplayRule> {
-        // Here you can fetch the rules from a database, API, or any other source
-        // For now, let's return some dummy data
         return listOf(
             DisplayRule(
                 appList = listOf("com.instagram.android"),
