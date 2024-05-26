@@ -30,13 +30,13 @@
         app:destination="com.focalstudio.focalhub.view.RulesScreen"
         android:label="Rules Screen">
         <composable
-            android:id="@+id/action_rulesScreen_to_createRuleScreen"
-            app:destination="com.focalstudio.focalhub.view.CreateRuleScreen" />
+            android:id="@+id/action_rulesScreen_to_editRuleScreen"
+            app:destination="com.focalstudio.focalhub.view.EditRuleScreen" />
     </composable>
 
     <composable
         android:id="@+id/createRuleScreen"
-        app:destination="com.focalstudio.focalhub.view.CreateRuleScreen"
-        android:label="Create Rule Screen" />
+        app:destination="com.focalstudio.focalhub.view.EditRuleScreen"
+        android:label="Edit Rule Screen" />
 
 </navigation>

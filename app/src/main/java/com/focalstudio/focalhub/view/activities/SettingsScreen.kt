@@ -6,18 +6,24 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.alorma.compose.settings.ui.SettingsMenuLink
 import com.focalstudio.focalhub.view.viewModel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,7 +35,11 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("FocalHub Settings") }
+                title = { Text("") },
+                navigationIcon = { IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -58,7 +68,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel) {
 fun SettingsSection(title: String) {
     Text(
         text = title,
-        fontSize = 20.sp,
+        fontSize = 26.sp,
         modifier = Modifier.padding(vertical = 18.dp, horizontal = 16.dp)
     )
 }
@@ -66,37 +76,50 @@ fun SettingsSection(title: String) {
 
 @Composable
 fun SettingItem(setting: String, description: String, onClick: () -> Unit, icon: ImageVector = Icons.AutoMirrored.Filled.ArrowForward) {
+        //Settings Tile from https://github.com/alorma/Compose-Settings (MIT licensed)
+    SettingsMenuLink(
+        title = { Text(text = setting) },
+        subtitle = { Text(text = description, color = Color.Gray) },
+        modifier = Modifier,
+        enabled = true,
+        icon = {},
+        action = {},
+        onClick = onClick,
+    )
+        //End Settings Tile
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 16.dp, horizontal = 8.dp)
-            .background(MaterialTheme.colorScheme.surface),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        /*Icon(
-            imageVector = icon, // Default icon, can be overridden
-            contentDescription = null,
-            modifier = Modifier.size(24.dp)
-        )*/
-        Column(
+        /* Own Implementation:
+        Row(
             modifier = Modifier
-                .weight(1f)
-                .padding(end = 8.dp, start = 24.dp)
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(vertical = 16.dp, horizontal = 8.dp)
+                .background(MaterialTheme.colorScheme.surface),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = setting,
-                fontSize = 16.sp,
-                modifier = Modifier.padding(bottom = 0.dp)
-            )
-            Text(
-                text = description,
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-        }
+            /*Icon(
+                imageVector = icon, // Default icon, can be overridden
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )*/
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp, start = 24.dp)
+            ) {
+                Text(
+                    text = setting,
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(bottom = 0.dp)
+                )
+                Text(
+                    text = description,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+            }
 
-    }
+        }*/
+
 }
 

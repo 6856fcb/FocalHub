@@ -9,7 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,6 +19,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
@@ -32,7 +36,9 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController, apps: List<App>, context: Context, viewModel: HomeScreenViewModel) {
+fun HomeScreen(navController: NavController, context: Context, viewModel: HomeScreenViewModel) {
+    val apps by remember { mutableStateOf(viewModel.appsList) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -56,10 +62,13 @@ fun HomeScreen(navController: NavController, apps: List<App>, context: Context, 
     }
 }
 
+
+
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppGrid(
-    apps: List<App>,
+    apps: State<List<App>>,
     context: Context,
     viewModel: HomeScreenViewModel
 ) {
@@ -67,7 +76,7 @@ fun AppGrid(
         columns = GridCells.Fixed(4),
         modifier = Modifier.padding(16.dp)
     ) {
-        items(apps) { app ->
+        itemsIndexed(apps.value) { _, app ->
             AppItem(app, context, viewModel)
         }
     }

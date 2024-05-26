@@ -5,41 +5,56 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.focalstudio.focalhub.view.activities.CreateRuleScreen
+import androidx.navigation.navArgument
+import com.focalstudio.focalhub.view.activities.EditRuleScreen
 import com.focalstudio.focalhub.view.activities.SettingsScreen
-import com.focalstudio.focalhub.view.activities.rulesManagerScreen
+import com.focalstudio.focalhub.view.activities.RulesManagerScreen
 import com.focalstudio.focalhub.view.activities.HomeScreen
 import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
+import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
 import com.focalstudio.focalhub.view.viewModel.SettingsViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Navigation(settingsViewModel: SettingsViewModel) {
+fun Navigation() {
     val navController = rememberNavController()
     val homeScreenViewModel: HomeScreenViewModel = viewModel()
+    val rulesManagerViewModel: RulesManagerViewModel = viewModel()
+    val settingsViewModel: SettingsViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = "mainScreen") {
         composable("mainScreen") {
-            val apps = homeScreenViewModel.appsList.collectAsState().value
+            val apps = homeScreenViewModel.appsList.value
             HomeScreen(
                 navController = navController,
-                apps = apps,
+                //apps = apps,
                 context = navController.context,
                 viewModel = homeScreenViewModel
-
             )
         }
         composable("settingsScreen") {
             SettingsScreen(navController, settingsViewModel)
         }
         composable("rulesScreen") {
-            rulesManagerScreen(navController)
+            RulesManagerScreen(navController, rulesManagerViewModel)
         }
-        composable("createRuleScreen") {
-            CreateRuleScreen(navController)
+        composable(
+            route = "editRule/{ruleId}",
+            arguments = listOf(navArgument("ruleId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val ruleId = backStackEntry.arguments?.getInt("ruleId")
+            if (ruleId != null) {
+                val rule = rulesManagerViewModel.getRuleData(ruleId)
+                EditRuleScreen(navController, rulesManagerViewModel, rule)
+            } else {
+                // Handle case where ruleId is null
+                // You could navigate to an error screen or do something else
+            }
         }
     }
 }
+
