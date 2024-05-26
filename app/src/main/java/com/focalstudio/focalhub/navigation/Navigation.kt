@@ -10,7 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.focalstudio.focalhub.view.activities.CreateRuleScreen
 import com.focalstudio.focalhub.view.activities.SettingsScreen
-import com.focalstudio.focalhub.view.activities.ShowRulesScreen
+import com.focalstudio.focalhub.view.activities.rulesManagerScreen
 import com.focalstudio.focalhub.view.activities.HomeScreen
 import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
 import com.focalstudio.focalhub.view.viewModel.SettingsViewModel
@@ -36,7 +36,7 @@ fun Navigation(settingsViewModel: SettingsViewModel) {
             SettingsScreen(navController, settingsViewModel)
         }
         composable("rulesScreen") {
-            ShowRulesScreen(navController)
+            rulesManagerScreen(navController)
         }
         composable("createRuleScreen") {
             CreateRuleScreen(navController)

@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 
 @Composable
-fun ShowRulesScreen(navController: NavController) {
+fun rulesManagerScreen(navController: NavController) {
     // Your Show Rules screen content
-    Text(text = "Show Rules Screen")
+    Text(text = "Manage Rules")
 }

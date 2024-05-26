@@ -25,7 +25,7 @@ import com.focalstudio.focalhub.view.viewModel.SettingsViewModel
 fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel) {
     val generalSettingsList by viewModel.generalSettingsList.collectAsState()
     val accountSettingsList by viewModel.accountSettingsList.collectAsState()
-
+    viewModel.setNavController(navController)
     Scaffold(
         topBar = {
             TopAppBar(
