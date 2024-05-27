@@ -2,19 +2,20 @@ package com.focalstudio.focalhub.view.activities
 
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -50,8 +51,13 @@ fun HomeScreen(navController: NavController, context: Context, viewModel: HomeSc
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = {}) {
+                Icon(Icons.Filled.Search, contentDescription = "Search Apps")
+            }
         }
-    ) { paddingValues ->
+        ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
             Text(
                 text = "Apps",
@@ -75,7 +81,7 @@ fun AppGrid(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier.padding(8.dp, bottom = 32.dp)
     ) {
         itemsIndexed(apps.value) { _, app ->
             AppItem(app, context, viewModel)
@@ -88,8 +94,8 @@ fun AppGrid(
 fun AppItem(app: App, context: Context, viewModel: HomeScreenViewModel) {
     Column(
         modifier = Modifier
-            .padding(8.dp)
-            .width(64.dp)
+            .padding(4.dp)
+            .width(80.dp)
             .clickable(
                 onClick = {
                     viewModel.appIconClicked(app, context)
@@ -102,7 +108,7 @@ fun AppItem(app: App, context: Context, viewModel: HomeScreenViewModel) {
             painter = painter,
             contentDescription = app.name,
             modifier = Modifier
-                .size(54.dp)
+                .size(46.dp)
                 .background(color = Color.White, shape = androidx.compose.foundation.shape.CircleShape) // For ripple effect
                 .padding(0.dp)
         )

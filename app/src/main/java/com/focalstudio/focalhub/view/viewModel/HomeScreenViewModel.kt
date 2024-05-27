@@ -7,7 +7,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +48,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
                 val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
                     addCategory(Intent.CATEGORY_LAUNCHER)
                 }
+
                 val apps = pm.queryIntentActivities(mainIntent, 0)
                     .map { resolveInfo ->
                         App(

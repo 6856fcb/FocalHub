@@ -47,7 +47,7 @@ fun Navigation() {
         ) { backStackEntry ->
             val ruleId = backStackEntry.arguments?.getInt("ruleId")
             if (ruleId != null) {
-                val rule = rulesManagerViewModel.getRuleData(ruleId)
+                val rule = rulesManagerViewModel.getRuleById(ruleId)
 
                 EditRuleScreen(navController, rulesManagerViewModel, rule, context = navController.context)
             } else {

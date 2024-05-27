@@ -1,11 +1,14 @@
 package com.focalstudio.focalhub.view.activities
+import AppSelectionDialog
 import android.app.AlertDialog
 import android.app.TimePickerDialog
 import android.content.Context
-import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -17,9 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-
 import com.alorma.compose.settings.ui.SettingsGroup
 import com.alorma.compose.settings.ui.SettingsMenuLink
 import com.alorma.compose.settings.ui.SettingsSwitch
@@ -50,6 +50,9 @@ fun EditRuleScreen(
     var selectedStartTime by remember { mutableStateOf(rule.startTime) }
     var selectedEndTime by remember { mutableStateOf(rule.endTime) }
     var selectedWeekdays by remember { mutableStateOf(rule.weekdays) }
+    var showAppSelectionDialog by remember { mutableStateOf(false) }
+
+    val apps by remember { mutableStateOf(viewModel.appsList) }
 
     Scaffold(
         topBar = {
@@ -61,7 +64,14 @@ fun EditRuleScreen(
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { viewModel.deleteRule(rule.id) }) {
+                Icon(Icons.Filled.Delete, contentDescription = "Delete Rule")
+            }
         }
+
+
     ) { paddingValues ->
         SettingsGroup(
             modifier = Modifier,
@@ -81,7 +91,7 @@ fun EditRuleScreen(
                 },
             )
             SettingsMenuLink(
-                title = { Text(text = "Change rule name") },
+                title = { Text(text = "Change Rule name") },
                 subtitle = {},
                 modifier = Modifier,
                 enabled = true,
@@ -96,7 +106,9 @@ fun EditRuleScreen(
                 enabled = true,
                 icon = {},
                 action = {},
-                onClick = {},
+                onClick = {
+                    showAppSelectionDialog = true
+                },
             )
             SettingsSwitch(
                 state = isBlacklist,
@@ -108,7 +120,7 @@ fun EditRuleScreen(
                 onCheckedChange = { newState: Boolean ->
                     isBlacklist = newState
                     viewModel.updateRuleIsBlacklist(rule.id, isBlacklist)
-                },
+                },//
             )
             SettingsSwitch(
                 state = isRecurring,
@@ -143,7 +155,7 @@ fun EditRuleScreen(
                     enabled = true,
                     icon = {},
                     action = {},
-                    onClick = {// Multi-choice dialog for selecting weekdays
+                    onClick = {
                         val daysOfWeek = arrayOf(
                             "Sunday", "Monday", "Tuesday", "Wednesday",
                             "Thursday", "Friday", "Saturday"
@@ -195,9 +207,6 @@ fun EditRuleScreen(
                         startTimePickerDialog.show()
                     },
                 )
-
-
-
             } else {
                 SettingsSwitch(
                     state = isEndTimeSet,
@@ -243,12 +252,22 @@ fun EditRuleScreen(
                         endTimePickerDialog.show()
                     },
                 )
-
-
             }
 
+            if (showAppSelectionDialog) {
+                AppSelectionDialog(
+                    viewModel = viewModel,
+                    ruleId = rule.id,
+                    onDismissRequest = { showAppSelectionDialog = false },
+                    onConfirm = { selectedApps ->
+                        viewModel.updateRuleAppList(rule.id, selectedApps)
+                        showAppSelectionDialog = false
+                    }
+                )
+            }
         }
     }
 }
+
 
 
