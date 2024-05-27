@@ -83,13 +83,21 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
                         currentTime.before(rule.endTime) &&
                         rule.weekdays.contains(currentDayOfWeek)
             }
+            if (!rule.isRecurring && rule.isActive && rule.isEndTimeSet) {
+                rule.isActive = currentTime.before(rule.endTime)
+            }
         }
+
 
         // Find active blacklisted and whitelisted apps
         val blacklistedApps = mutableSetOf<String>()
         val whitelistedApps = mutableSetOf<String>()
         for (rule in displayRules) {
             if (rule.isActive) {
+                if (!rule.isRecurring && !currentTime.before(rule.endTime) && rule.isEndTimeSet) {
+                    rule.isActive = false
+                    continue
+                }
                 if (rule.isBlacklist) {
                     blacklistedApps.addAll(rule.appList)
                 } else {
