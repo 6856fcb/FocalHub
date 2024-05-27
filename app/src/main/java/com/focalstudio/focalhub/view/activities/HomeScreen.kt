@@ -2,11 +2,13 @@ package com.focalstudio.focalhub.view.activities
 
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -38,7 +40,6 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 @Composable
 fun HomeScreen(navController: NavController, context: Context, viewModel: HomeScreenViewModel) {
     val apps by remember { mutableStateOf(viewModel.appsList) }
-
     Scaffold(
         topBar = {
             TopAppBar(

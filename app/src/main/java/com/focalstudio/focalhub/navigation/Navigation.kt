@@ -3,7 +3,6 @@ package com.focalstudio.focalhub.navigation
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -49,7 +48,8 @@ fun Navigation() {
             val ruleId = backStackEntry.arguments?.getInt("ruleId")
             if (ruleId != null) {
                 val rule = rulesManagerViewModel.getRuleData(ruleId)
-                EditRuleScreen(navController, rulesManagerViewModel, rule)
+
+                EditRuleScreen(navController, rulesManagerViewModel, rule, context = navController.context)
             } else {
                 // Handle case where ruleId is null
                 // You could navigate to an error screen or do something else

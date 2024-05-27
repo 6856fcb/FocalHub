@@ -7,15 +7,15 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.Recomposer
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.DisplayRuleRepository
 import com.focalstudio.focalhub.data.DisplayRuleRepositoryProvider
+import com.focalstudio.focalhub.data.model.App
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -33,12 +33,15 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
         observeRuleChanges()
         loadApps()
     }
+
     private fun observeRuleChanges() {
         viewModelScope.launch {
-            ruleRepository.getRules()
-            loadApps()
+            ruleRepository.setRuleChangeListener {
+                loadApps()
+            }
         }
     }
+
     private fun loadApps() {
         viewModelScope.launch {
             try {
@@ -56,13 +59,12 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
                     }
                 val filteredApps = applyDisplayRules(apps)
 
-                _appsList.value = filteredApps // Update the _appsList value here
+                _appsList.value = filteredApps
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
-
 
     private suspend fun applyDisplayRules(apps: List<App>): List<App> {
         val displayRules = ruleRepository.getRules()
@@ -70,34 +72,61 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
         val currentDayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
         val filteredApps = mutableListOf<App>()
 
+        if (displayRules.isEmpty()) {
+            return apps
+        }
+
+        // Check recurring rules and update their active states
         for (rule in displayRules) {
-            // Check if the rule is within the specified time window and weekday
-            val ruleStartTime = rule.startTime
-            val ruleEndTime = rule.endTime
-            val ruleDaysOfWeek = rule.weekdays
-            if (!(currentTime.after(ruleStartTime) && currentTime.before(ruleEndTime) && ruleDaysOfWeek.contains(currentDayOfWeek))) {
-                rule.isActive = true
+            if (rule.isRecurring && !rule.isDisabled) {
+                rule.isActive = currentTime.after(rule.startTime) &&
+                        currentTime.before(rule.endTime) &&
+                        rule.weekdays.contains(currentDayOfWeek)
             }
+        }
 
+        // Find active blacklisted and whitelisted apps
+        val blacklistedApps = mutableSetOf<String>()
+        val whitelistedApps = mutableSetOf<String>()
+        for (rule in displayRules) {
             if (rule.isActive) {
-                for (app in apps) {
-                    var isAllowed = true
-
-                    // Blacklist active and app in List OR Whitelist active and app not present in List
-                    if ((rule.isBlacklist && rule.appList.contains(app.packageName)) ||
-                        (!rule.isBlacklist && !rule.appList.contains(app.packageName))
-                    ) {
-                        isAllowed = false
-                    }
-
-                    if (isAllowed) {
-                        filteredApps.add(app)
-                    }
+                if (rule.isBlacklist) {
+                    blacklistedApps.addAll(rule.appList)
+                } else {
+                    whitelistedApps.addAll(rule.appList)
                 }
             }
         }
-        return filteredApps.distinct()
+
+        // Apply priorities
+        if (blacklistedApps.isNotEmpty()) {
+            // Blacklist exists, prioritize it over whitelist
+            for (app in apps) {
+                if (whitelistedApps.contains(app.packageName)) {
+                    // Allow whitelisted apps
+                    filteredApps.add(app)
+                } else if (blacklistedApps.contains(app.packageName)) {
+                    // Block blacklisted apps
+                    continue
+                }
+            }
+        } else {
+            // No blacklisted apps, allow only whitelisted apps
+            for (app in apps) {
+                if (whitelistedApps.contains(app.packageName)) {
+                    // Allow whitelisted apps
+                    filteredApps.add(app)
+                }
+            }
+        }
+
+        return filteredApps.ifEmpty { apps }
+
     }
+
+
+
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun appIconClicked(app: App, context: Context) {
