@@ -116,7 +116,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
                 } else if (blacklistedApps.contains(app.packageName)) {
                     // Block blacklisted apps
                     continue
-                }
+                } else if (whitelistedApps.isEmpty()){filteredApps.add(app)}
             }
         } else {
             // No blacklisted apps, allow only whitelisted apps
