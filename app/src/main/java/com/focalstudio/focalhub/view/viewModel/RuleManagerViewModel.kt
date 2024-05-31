@@ -50,9 +50,11 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
         updateRuleField(ruleId) { it.copy(isActive = true) }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun getRuleById(ruleId: Int): DisplayRule {
-        return _rules.value.find { it.id == ruleId }!!
+        return _rules.value.find { it.id == ruleId } ?: getDefaultRuleData()
     }
+
 
     private fun loadApps() {
         viewModelScope.launch {
@@ -127,7 +129,7 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
         val newRule = DisplayRule(
             id = availableId,
             name = "New Rule $availableId",
-            appList = listOf("com.instagram.android"),
+            appList = emptyList(),
             isBlacklist = false,
             isActive = false,
             isRecurring = false,
@@ -160,19 +162,25 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun deleteRule(ruleId: Int) {
+        viewModelScope.launch {
+            // Delete the rule from the repository
+            ruleRepository.deleteRule(ruleId)
 
-        val currentRules = _rules.value.toMutableList()
-        val index = currentRules.indexOfFirst { it.id == ruleId }
-        if (index != -1) {
-
-            _rules.value = currentRules
-            viewModelScope.launch {
-                ruleRepository.deleteRule(ruleId)
+            // Update the _rules list after the rule is deleted
+            val currentRules = _rules.value?.toMutableList()
+            val index = currentRules?.indexOfFirst { it.id == ruleId }
+            if (index != null && index != -1) {
+                currentRules.removeAt(index)
+                _rules.value = currentRules
             }
-            updateRuleField(ruleId) { it.copy() }
+
+            // Navigate back
             navController?.popBackStack()
         }
     }
+
+
+
 
 
     fun updateRuleIsDisabled(ruleId: Int, newIsDisabled: Boolean) {

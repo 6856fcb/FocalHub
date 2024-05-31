@@ -2,6 +2,10 @@ package com.focalstudio.focalhub.data
 
 import android.content.Context
 import com.focalstudio.focalhub.data.model.DisplayRule
+import com.focalstudio.focalhub.data.model.DisplayRuleDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -28,7 +32,8 @@ object DisplayRuleRepositoryProvider {
 
     fun getInstance(context: Context): DisplayRuleRepository {
         return instance ?: synchronized(this) {
-            instance ?: InMemoryDisplayRuleRepository().also { instance = it }
+            //instance ?: InMemoryDisplayRuleRepository().also { instance = it }
+            instance ?: RoomDisplayRuleRepository(context).also { instance = it }
         }
     }
 }
@@ -113,5 +118,118 @@ class InMemoryDisplayRuleRepository : DisplayRuleRepository {
 
     private fun notifyRuleChange() {
         ruleChangeListener?.invoke()
+    }
+}
+class RoomDisplayRuleRepository(private val context: Context) : DisplayRuleRepository {
+
+    private val database = DisplayRuleDatabase.getInstance(context)
+    private val dao = database.displayRuleDao()
+
+    private val ioScope = CoroutineScope(Dispatchers.IO)
+
+    override suspend fun getRules(): List<DisplayRule> {
+        return dao.getAllRules()
+    }
+
+    override fun addRule(rule: DisplayRule) {
+        ioScope.launch {
+            dao.insert(rule)
+        }
+    }
+
+    override fun updateRule(rule: DisplayRule) {
+        ioScope.launch {
+            dao.update(rule)
+        }
+    }
+
+    override fun deleteRule(ruleId: Int) {
+        ioScope.launch {
+            dao.delete(dao.getRuleById(ruleId))
+        }
+    }
+
+    override fun setRuleChangeListener(listener: () -> Unit) {
+        // No implementation needed since Room doesn't provide direct listeners
+    }
+
+    override fun updateRuleName(ruleId: Int, newName: String) {
+        ioScope.launch {
+            val rule = dao.getRuleById(ruleId)
+            rule.name = newName
+            dao.update(rule)
+        }
+    }
+
+    override fun updateRuleAppList(ruleId: Int, newAppList: List<String>) {
+        ioScope.launch {
+            val rule = dao.getRuleById(ruleId)
+            rule.appList = newAppList
+            dao.update(rule)
+        }
+    }
+
+    override fun updateRuleIsBlacklist(ruleId: Int, isBlacklist: Boolean) {
+        ioScope.launch {
+            val rule = dao.getRuleById(ruleId)
+            rule.isBlacklist = isBlacklist
+            dao.update(rule)
+        }
+    }
+
+    override fun updateRuleIsActive(ruleId: Int, isActive: Boolean) {
+        ioScope.launch {
+            val rule = dao.getRuleById(ruleId)
+            rule.isActive = isActive
+            dao.update(rule)
+        }
+    }
+
+    override fun updateRuleIsDisabled(ruleId: Int, isDisabled: Boolean) {
+        ioScope.launch {
+            val rule = dao.getRuleById(ruleId)
+            rule.isDisabled = isDisabled
+            dao.update(rule)
+        }
+    }
+
+    override fun updateRuleIsEndTimeSet(ruleId: Int, isEndTimeSet: Boolean) {
+        ioScope.launch {
+            val rule = dao.getRuleById(ruleId)
+            rule.isEndTimeSet = isEndTimeSet
+            dao.update(rule)
+        }
+    }
+
+    override fun updateRuleIsRecurring(ruleId: Int, isRecurring: Boolean) {
+        ioScope.launch {
+            val rule = dao.getRuleById(ruleId)
+            rule.isRecurring = isRecurring
+            dao.update(rule)
+        }
+    }
+
+    override fun updateRuleStartTime(ruleId: Int, startTime: Date) {
+        ioScope.launch {
+            val rule = dao.getRuleById(ruleId)
+            rule.startTime = startTime
+            dao.update(rule)
+        }
+    }
+
+    override fun updateRuleEndTime(ruleId: Int, endTime: Date) {
+        ioScope.launch {
+            val rule = dao.getRuleById(ruleId)
+            rule.endTime = endTime
+            dao.update(rule)
+        }
+    }
+
+    override fun updateRuleWeekdays(ruleId: Int, weekdays: List<Int>) {
+        ioScope.launch {
+            val rule = dao.getRuleById(ruleId)
+            rule.weekdays = weekdays
+            dao.update(rule)
+        }
     }
 }
