@@ -3,6 +3,8 @@ import AppSelectionDialog
 import android.app.AlertDialog
 import android.app.TimePickerDialog
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -33,6 +35,7 @@ fun getSelectedWeekdaysString(selectedWeekdays: List<Int>): String {
     return selectedDays.joinToString(", ")
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditRuleScreen(

@@ -10,7 +10,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.focalstudio.focalhub.navigation.Navigation
 import com.focalstudio.focalhub.utils.FocalHubTheme
-
+import androidx.lifecycle.lifecycleScope
 
 class MainActivity : ComponentActivity() {
 
@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             FocalHubTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    Navigation()
+                    Navigation(lifecycleOwner = this@MainActivity)
                 }
             }
         }

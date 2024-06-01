@@ -1,5 +1,6 @@
 package com.focalstudio.focalhub.view.activities
 
+import AppSearchDialog
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -11,7 +12,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,11 +26,16 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
@@ -39,8 +44,10 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController, context: Context, viewModel: HomeScreenViewModel) {
+fun HomeScreen(navController: NavController, context: Context, viewModel: HomeScreenViewModel, lifecycleOwner: LifecycleOwner) {
     val apps by remember { mutableStateOf(viewModel.appsList) }
+    var showAppSearchDialog by remember { mutableStateOf(false) }
+    lifecycleOwner.lifecycle.addObserver(viewModel)
     Scaffold(
         topBar = {
             TopAppBar(
@@ -53,11 +60,11 @@ fun HomeScreen(navController: NavController, context: Context, viewModel: HomeSc
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = {}) {
+            FloatingActionButton(onClick = { showAppSearchDialog = true }) {
                 Icon(Icons.Filled.Search, contentDescription = "Search Apps")
             }
         }
-        ) { paddingValues ->
+    ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
             Text(
                 text = "Apps",
@@ -66,10 +73,16 @@ fun HomeScreen(navController: NavController, context: Context, viewModel: HomeSc
             )
             AppGrid(apps, context, viewModel)
         }
+
+        if (showAppSearchDialog) {
+            AppSearchDialog(
+                viewModel = viewModel,
+                onDismissRequest = { showAppSearchDialog = false },
+                context = context
+            )
+        }
     }
 }
-
-
 
 
 @RequiresApi(Build.VERSION_CODES.O)

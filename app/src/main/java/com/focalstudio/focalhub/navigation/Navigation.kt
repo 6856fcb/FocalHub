@@ -16,10 +16,14 @@ import com.focalstudio.focalhub.view.activities.HomeScreen
 import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
 import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
 import com.focalstudio.focalhub.view.viewModel.SettingsViewModel
+import androidx.lifecycle.LifecycleOwner
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Navigation() {
+fun Navigation(lifecycleOwner: LifecycleOwner) {
     val navController = rememberNavController()
     val homeScreenViewModel: HomeScreenViewModel = viewModel()
     val rulesManagerViewModel: RulesManagerViewModel = viewModel()
@@ -27,12 +31,26 @@ fun Navigation() {
 
     NavHost(navController = navController, startDestination = "mainScreen") {
         composable("mainScreen") {
-            val apps = homeScreenViewModel.appsList.value
+            //val apps = homeScreenViewModel.appsList.value
+
+            // Observe the lifecycle
+            DisposableEffect(lifecycleOwner) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        homeScreenViewModel.onResume()
+                    }
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose {
+                    lifecycleOwner.lifecycle.removeObserver(observer)
+                }
+            }
+
             HomeScreen(
                 navController = navController,
-                //apps = apps,
                 context = navController.context,
-                viewModel = homeScreenViewModel
+                viewModel = homeScreenViewModel,
+                lifecycleOwner = lifecycleOwner
             )
         }
         composable("settingsScreen") {
@@ -51,10 +69,10 @@ fun Navigation() {
 
                 EditRuleScreen(navController, rulesManagerViewModel, rule, context = navController.context)
             } else {
-                // Handle case where ruleId is null
-                // You could navigate to an error screen or do something else
+                // TODO
             }
         }
     }
 }
+
 

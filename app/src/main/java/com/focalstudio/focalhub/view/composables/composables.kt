@@ -1,3 +1,8 @@
+import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -6,9 +11,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -23,13 +30,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.focalstudio.focalhub.data.model.App
+import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
 import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.runtime.*
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppSelectionDialog(
     viewModel: RulesManagerViewModel,
@@ -106,7 +120,99 @@ fun AppSelectionDialog(
 
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun AppSearchDialog(
+    viewModel: HomeScreenViewModel,
+    context: Context,
+    onDismissRequest: () -> Unit
+) {
+    val allApps by remember { viewModel.appsList }
+    val searchQuery = remember { mutableStateOf(TextFieldValue()) }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
+    // Show the keyboard when the dialog is displayed
+    DisposableEffect(Unit) {
+        keyboardController?.show()
+        onDispose {
+            keyboardController?.hide()
+        }
+    }
+
+    Dialog(onDismissRequest = onDismissRequest) {
+        Surface(
+            modifier = Modifier
+                .padding(vertical = 16.dp)
+                ,
+            shape = MaterialTheme.shapes.large
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                TextField(
+                    value = searchQuery.value,
+                    onValueChange = { searchQuery.value = it },
+                    label = { Text(text = "Search App") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                LazyColumn(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    val filteredApps: List<App> = allApps.filter { app ->
+                        app.name.contains(searchQuery.value.text, ignoreCase = true)
+                    }
+
+                    if (searchQuery.value.text.isNotEmpty()) {
+                        items(filteredApps.sortedBy { it.name }) { app ->
+                            SearchAppItem(app, context, viewModel)
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(0.1f)
+                ) {
+                    TextButton(onClick = onDismissRequest) {
+                        Text("Cancel")
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun SearchAppItem(app: App, context: Context, viewModel: HomeScreenViewModel) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                onClick = {
+                    viewModel.appIconClicked(app, context)
+                }
+            )
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val painter: Painter = rememberDrawablePainter(drawable = app.icon)
+        Image(
+            painter = painter,
+            contentDescription = app.name,
+            modifier = Modifier
+                .size(46.dp)
+                .background(color = Color.White, shape = CircleShape) // For ripple effect
+                .padding(0.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(app.name)
+    }
+}
 @Composable
 fun AppItem(app: App, isSelected: Boolean, onSelect: () -> Unit) {
     Row(
