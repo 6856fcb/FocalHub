@@ -1,11 +1,14 @@
 package com.focalstudio.focalhub.view.viewModel
 
 import android.app.Application
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import androidx.room.ColumnInfo
 import com.focalstudio.focalhub.data.RuleRepositoryProvider
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.model.UsageRule
@@ -13,6 +16,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.*
 
 class AppUsageViewModel(application: Application) : AndroidViewModel(application) {
@@ -37,6 +42,47 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
         navController = controller
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun addUsageRule() {
+        val currentRules = _usageRules.value
+        val newUsageRule = getDefaultUsageRuleData()
+
+        _usageRules.value = currentRules + newUsageRule
+
+        viewModelScope.launch {
+            ruleRepository.addUsageRule(newUsageRule)
+        }
+
+        navController?.navigate("editUsageRule/${newUsageRule.id}")
+    }
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getDefaultUsageRuleData(): UsageRule {
+        val currentUsageRules = _usageRules.value
+        val availableId = (currentUsageRules.maxOfOrNull { it.id } ?: 0) + 1
+
+        val startOfDay = LocalDateTime.now().toLocalDate().atTime(8, 0)
+        val endOfDay = startOfDay.plusDays(1).toLocalDate().atTime(0, 0)
+
+        return UsageRule(
+            id = availableId,
+            name = "New Usage Rule$availableId",
+            appList = emptyList<String>(),
+            ruleMode = 0,
+            isLinkedToDisplayRule = false,
+            linkedRuleId = 0,
+            onlyImportApps = true,
+            isCurrentlyActive = false,
+            isManuallyDisabled = false,
+            restrictUsageTimePerApp = false,
+            maxUsageDurationInSeconds= 0,
+            useMaxSessionTimes = false,
+            displaySessionDurationDialog = false,
+            maxSessionDurationInSeconds = 0,
+            restrictUntilEndTime = false,
+            timeWindowStartTime = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant()),
+            timeWindowEndTime = Date.from(endOfDay.minusHours(1).atZone(ZoneId.systemDefault()).toInstant())
+        )
+    }
     private fun loadRules() {
         viewModelScope.launch {
             _usageRules.value = ruleRepository.getUsageRules()

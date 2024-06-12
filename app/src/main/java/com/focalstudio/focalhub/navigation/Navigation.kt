@@ -24,6 +24,7 @@ import com.focalstudio.focalhub.view.activities.AppRulesScreen
 import com.focalstudio.focalhub.view.activities.EditAppUsageScreen
 import com.focalstudio.focalhub.view.viewModel.AppUsageViewModel
 
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Navigation(lifecycleOwner: LifecycleOwner) {
@@ -35,9 +36,6 @@ fun Navigation(lifecycleOwner: LifecycleOwner) {
 
     NavHost(navController = navController, startDestination = "mainScreen") {
         composable("mainScreen") {
-            //val apps = homeScreenViewModel.appsList.value
-
-            // Observe the lifecycle
             DisposableEffect(lifecycleOwner) {
                 val observer = LifecycleEventObserver { _, event ->
                     if (event == Lifecycle.Event.ON_RESUME) {
@@ -49,7 +47,6 @@ fun Navigation(lifecycleOwner: LifecycleOwner) {
                     lifecycleOwner.lifecycle.removeObserver(observer)
                 }
             }
-
             HomeScreen(
                 navController = navController,
                 context = navController.context,
@@ -70,31 +67,27 @@ fun Navigation(lifecycleOwner: LifecycleOwner) {
             val ruleId = backStackEntry.arguments?.getInt("ruleId")
             if (ruleId != null) {
                 val rule = rulesManagerViewModel.getRuleById(ruleId)
-
                 EditRuleScreen(navController, rulesManagerViewModel, rule, context = navController.context)
-            } else {
-                // TODO
             }
         }
         composable("usageRulesScreen") {
             AppRulesScreen(navController, appUsageViewModel)
         }
         composable(
-            route = "editUsageRule/{ruleId}",
+            route = "editUsageRule/{usageRuleId}",
             arguments = listOf(navArgument("usageRuleId") { type = NavType.IntType })
         ) { backStackEntry ->
-            val ruleId = backStackEntry.arguments?.getInt("usageRuleId")
-            if (ruleId != null) {
-                val rule = appUsageViewModel.getUsageRuleById(ruleId)
-                if (rule != null)
-                {
-                EditAppUsageScreen(navController, appUsageViewModel, rule, context = navController.context)
+            val usageRuleId = backStackEntry.arguments?.getInt("usageRuleId")
+            if (usageRuleId != null) {
+                val rule = appUsageViewModel.getUsageRuleById(usageRuleId)
+                if (rule != null) {
+                    EditAppUsageScreen(navController, appUsageViewModel, rule, context = navController.context)
                 }
-            } else {
-                // TODO
             }
         }
     }
 }
+
+
 
 

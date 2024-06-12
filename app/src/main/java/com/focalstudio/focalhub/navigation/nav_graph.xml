@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res/androidx"
-
     android:id="@+id/nav_graph"
     app:startDestination="@id/mainScreen"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -23,6 +22,9 @@
         <composable
             android:id="@+id/action_settingsScreen_to_rulesScreen"
             app:destination="com.focalstudio.focalhub.view.RulesScreen" />
+        <composable
+            android:id="@+id/action_settingsScreen_to_usageRulesScreen"
+            app:destination="com.focalstudio.focalhub.view.AppRulesScreen"/>
     </composable>
 
     <composable
@@ -40,7 +42,7 @@
         android:label="Edit Rule Screen" />
 
     <composable
-        android:id="@+id/usageRuleScreen"
+        android:id="@+id/usageRulesScreen"
         app:destination="com.focalstudio.focalhub.view.AppRulesScreen"
         android:label="Usage Rules Screen">
         <composable
@@ -49,7 +51,7 @@
     </composable>
 
     <composable
-        android:id="@+id/createUsageRuleScreen"
+        android:id="@+id/editUsageRuleScreen"
         app:destination="com.focalstudio.focalhub.view.EditAppUsageScreen"
         android:label="Edit App Usage Rule Screen" />
 

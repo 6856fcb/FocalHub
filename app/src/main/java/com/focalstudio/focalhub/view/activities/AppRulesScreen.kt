@@ -49,7 +49,7 @@ fun AppRulesScreen(navController: NavController, viewModel: AppUsageViewModel) {
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { viewModel.addRule() }) {
+            FloatingActionButton(onClick = { viewModel.addUsageRule() }) {
                 Icon(Icons.Filled.Add, contentDescription = "Add Rule")
             }
         }
