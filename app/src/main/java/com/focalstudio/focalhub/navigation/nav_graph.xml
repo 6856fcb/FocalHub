@@ -39,4 +39,18 @@
         app:destination="com.focalstudio.focalhub.view.EditRuleScreen"
         android:label="Edit Rule Screen" />
 
+    <composable
+        android:id="@+id/usageRuleScreen"
+        app:destination="com.focalstudio.focalhub.view.AppRulesScreen"
+        android:label="Usage Rules Screen">
+        <composable
+            android:id="@+id/action_usageRulesScreen_to_editUsageRuleScreen"
+            app:destination="com.focalstudio.focalhub.view.EditAppUsageScreen" />
+    </composable>
+
+    <composable
+        android:id="@+id/createUsageRuleScreen"
+        app:destination="com.focalstudio.focalhub.view.EditAppUsageScreen"
+        android:label="Edit App Usage Rule Screen" />
+
 </navigation>

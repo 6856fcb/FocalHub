@@ -10,9 +10,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.focalstudio.focalhub.data.DisplayRuleRepositoryProvider
+import com.focalstudio.focalhub.data.RuleRepositoryProvider
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.model.DisplayRule
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -28,12 +30,13 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
     private val _rules = MutableStateFlow<List<DisplayRule>>(emptyList())
     val rules: StateFlow<List<DisplayRule>> get() = _rules
     private var navController: NavController? = null
-    private val ruleRepository = DisplayRuleRepositoryProvider.getInstance(application)
-
+    private val ruleRepository = RuleRepositoryProvider.getInstance(application)
+    private var periodicRuleCheckJob: Job? = null
 
     init {
         loadRules()
         loadApps()
+        startPeriodicRuleCheck()
     }
 
     fun setNavController(controller: NavController) {
@@ -43,11 +46,8 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
     private fun loadRules() {
         viewModelScope.launch {
             _rules.value = ruleRepository.getRules()
-        }
-    }
 
-    fun onRuleSelected(ruleId: Int) {
-        updateRuleField(ruleId) { it.copy(isActive = true) }
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -79,28 +79,24 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
-    private fun applyDisplayRules(apps: List<App>): List<App> {
-        // Implement the logic to filter the apps based on display rules
-        return apps
-    }
-
     @RequiresApi(Build.VERSION_CODES.O)
     private fun getDefaultRuleData(): DisplayRule {
-        val currentDateTime = LocalDateTime.now()
-        val dateTimeTwoHoursLater = currentDateTime.plusHours(2)
-        val currentDateTimeAsDate = Date.from(currentDateTime.atZone(ZoneId.systemDefault()).toInstant())
-        val dateTimeTwoHoursLaterAsDate = Date.from(dateTimeTwoHoursLater.atZone(ZoneId.systemDefault()).toInstant())
+        val currentRules = _rules.value
+        val availableId = (currentRules.maxOfOrNull { it.id } ?: 0) + 1
+
+        val startOfDay = LocalDateTime.now().toLocalDate().atTime(8, 0)
+        val endOfDay = startOfDay.plusDays(1).toLocalDate().atTime(0, 0)
 
         return DisplayRule(
-            id = 999,
-            name = "Rule",
+            id = availableId,
+            name = "New Rule $availableId",
             appList = emptyList(),
             isBlacklist = false,
             isActive = false,
             isRecurring = false,
-            startTime = currentDateTimeAsDate,
-            endTime = dateTimeTwoHoursLaterAsDate,
-            weekdays = emptyList(),
+            startTime = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant()),
+            endTime = Date.from(endOfDay.minusHours(1).atZone(ZoneId.systemDefault()).toInstant()),
+            weekdays = listOf(2,3,4,5,6),
             isDisabled = false,
             isEndTimeSet = false
         )
@@ -121,24 +117,7 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
     @RequiresApi(Build.VERSION_CODES.O)
     fun addRule() {
         val currentRules = _rules.value
-        val availableId = (currentRules.maxOfOrNull { it.id } ?: 0) + 1
-
-        val startOfDay = LocalDateTime.now().toLocalDate().atTime(8, 0)
-        val endOfDay = startOfDay.plusDays(1).toLocalDate().atTime(0, 0)
-
-        val newRule = DisplayRule(
-            id = availableId,
-            name = "New Rule $availableId",
-            appList = emptyList(),
-            isBlacklist = false,
-            isActive = false,
-            isRecurring = false,
-            startTime = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant()),
-            endTime = Date.from(endOfDay.minusHours(1).atZone(ZoneId.systemDefault()).toInstant()),
-            weekdays = listOf(2,3,4,5,6),
-            isDisabled = false,
-            isEndTimeSet = false
-        )
+        val newRule = getDefaultRuleData()
 
         _rules.value = currentRules + newRule
 
@@ -167,9 +146,9 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
             ruleRepository.deleteRule(ruleId)
 
             // Update the _rules list after the rule is deleted
-            val currentRules = _rules.value?.toMutableList()
-            val index = currentRules?.indexOfFirst { it.id == ruleId }
-            if (index != null && index != -1) {
+            val currentRules = _rules.value.toMutableList()
+            val index = currentRules.indexOfFirst { it.id == ruleId }
+            if (index != -1) {
                 currentRules.removeAt(index)
                 _rules.value = currentRules
             }
@@ -178,10 +157,6 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
             navController?.popBackStack()
         }
     }
-
-
-
-
 
     fun updateRuleIsDisabled(ruleId: Int, newIsDisabled: Boolean) {
         updateRuleField(ruleId) { it.copy(isDisabled = newIsDisabled) }
@@ -225,4 +200,32 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
     fun updateRuleWeekdays(ruleId: Int, weekdays: List<Int>) {
         updateRuleField(ruleId) { it.copy(weekdays = weekdays) }
     }
+
+    private fun startPeriodicRuleCheck() {
+        //TODO Might Run in background forever
+        periodicRuleCheckJob?.cancel()
+        periodicRuleCheckJob = viewModelScope.launch {
+            while (true) {
+                checkActiveRules()
+                loadRules()
+                loadApps()
+                delay(10000)
+            // Check every 10 seconds
+            }
+        }
+    }
+
+    fun checkActiveRules() {
+        _rules.value.forEach { rule ->
+            val isActive = isRuleCurrentlyActive(rule)
+            if (isActive != rule.isActive) {
+                updateRuleIsActive(rule.id, isActive)
+            }
+        }
+    }
+
+    fun stopPeriodicRuleCheck() {
+        periodicRuleCheckJob?.cancel()
+    }
+
 }

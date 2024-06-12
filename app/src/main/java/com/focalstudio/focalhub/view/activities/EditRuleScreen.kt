@@ -57,6 +57,7 @@ fun EditRuleScreen(
 
     val apps by remember { mutableStateOf(viewModel.appsList) }
 
+
     Scaffold(
         topBar = {
             TopAppBar(

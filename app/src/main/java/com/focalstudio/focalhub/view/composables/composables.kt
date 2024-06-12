@@ -41,6 +41,7 @@ import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.runtime.*
+import androidx.lifecycle.ViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -189,6 +190,7 @@ fun AppSearchDialog(
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun SearchAppItem(app: App, context: Context, viewModel: HomeScreenViewModel) {
+
     Row(
         modifier = Modifier
             .fillMaxWidth()

@@ -15,14 +15,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.viewModelScope
-import com.focalstudio.focalhub.data.DisplayRuleRepository
-import com.focalstudio.focalhub.data.DisplayRuleRepositoryProvider
+import com.focalstudio.focalhub.data.RuleRepository
+import com.focalstudio.focalhub.data.RuleRepositoryProvider
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.utils.applyDisplayRules
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class HomeScreenViewModel(application: Application) : AndroidViewModel(application), LifecycleObserver {
+
+    private var periodicRuleCheckJob: Job? = null
 
     private val _appsList = mutableStateOf<List<App>>(emptyList())
     val appsList: State<List<App>> get() = _appsList
@@ -30,12 +33,12 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
     private val _isVibrationEnabled = mutableStateOf(true)
     val isVibrationEnabled: State<Boolean> get() = _isVibrationEnabled
 
-    private val ruleRepository: DisplayRuleRepository = DisplayRuleRepositoryProvider.getInstance(application.applicationContext)
+    private val ruleRepository: RuleRepository = RuleRepositoryProvider.getInstance(application.applicationContext)
 
     init {
         observeRuleChanges()
         loadApps()
-        startPeriodicRuleCheck()
+        //startPeriodicRuleCheck()
     }
 
     private fun observeRuleChanges() {
@@ -72,18 +75,26 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    fun onResume() {
+        loadApps()
+        // periodic rule check coroutine when ViewModel resumed
+        startPeriodicRuleCheck()
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+    fun onPause() {
+        // Cancel rule check coroutine when viewModel is paused
+        periodicRuleCheckJob?.cancel()
+    }
+
     private fun startPeriodicRuleCheck() {
-        viewModelScope.launch {
+        periodicRuleCheckJob = viewModelScope.launch {
             while (true) {
                 loadApps()
                 delay(60000) // Check every 60 seconds
             }
         }
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun onResume() {
-        loadApps()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.alorma.compose.settings.ui.SettingsMenuLink
+import com.focalstudio.focalhub.utils.isRuleActive
 import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
 import java.text.DateFormat
 
@@ -44,7 +45,8 @@ fun getSelectedShortWeekdaysString(selectedWeekdays: List<Int>): String {
 fun RulesManagerScreen(navController: NavController, viewModel: RulesManagerViewModel) {
 
     viewModel.setNavController(navController)
-    val rules by viewModel.rules.collectAsState()
+    val rules by remember { viewModel.rules }.collectAsState()
+    //val rules by viewModel.rules.collectAsState()
     val noActiveRules = rules.all { !it.isActive }
 
 
@@ -96,8 +98,8 @@ fun RulesManagerScreen(navController: NavController, viewModel: RulesManagerView
                 val selectedStartTime by remember { mutableStateOf(rule.startTime) }
                 val selectedEndTime by remember { mutableStateOf(rule.endTime) }
                 val selectedWeekdays by remember { mutableStateOf(rule.weekdays) }
-                val radioState = remember { mutableStateOf(rule.isActive) }
                 var isActive = rule.isActive
+                val isEndTimeSet by remember { mutableStateOf(rule.isEndTimeSet)}
 
                 val color: Color = if ((rule.isDisabled && rule.isRecurring) || !isActive) {
                     Color.LightGray
@@ -123,7 +125,7 @@ fun RulesManagerScreen(navController: NavController, viewModel: RulesManagerView
                         if (isActive) {
                             Text(
                                 text = "Active ${
-                                    if (rule.isEndTimeSet) "until ${
+                                    if (isEndTimeSet) "until ${
                                         DateFormat.getTimeInstance(DateFormat.SHORT)
                                             .format(selectedEndTime)
                                     }"
@@ -131,6 +133,11 @@ fun RulesManagerScreen(navController: NavController, viewModel: RulesManagerView
                                         ""
                                 }", color = color
                             )
+                        } else if (isEndTimeSet){
+                            Text(text = "Deactivated at  ${
+                                DateFormat.getTimeInstance(DateFormat.SHORT)
+                                    .format(selectedEndTime)
+                            }", color = color)
                         } else {
                             Text(text = "Not Active", color = color)
                         }
@@ -146,6 +153,7 @@ fun RulesManagerScreen(navController: NavController, viewModel: RulesManagerView
                                 onClick = {
                                     isActive = !isActive
                                     viewModel.updateRuleIsActive(rule.id, isActive)
+                                    if (isEndTimeSet && isActive) {viewModel.checkActiveRules()}
                                 }
                             )
                         } else {
@@ -158,6 +166,7 @@ fun RulesManagerScreen(navController: NavController, viewModel: RulesManagerView
                         }
                     },
                     onClick = {
+                        //viewModel.stopPeriodicRuleCheck()
                         // Navigate to Edit Rule page passing the selected rule
                         navController.navigate("editRule/${rule.id}")
                     },

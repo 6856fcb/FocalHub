@@ -48,8 +48,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private fun handleSettingClick(setting: String) {
         if (setting == "Manage Rules" && navController != null) {
             navController?.navigate("rulesScreen")
-        } else {
-            // Handle other settings clicks
+        }
+        if (setting == "Manage Apps" && navController != null) {
+            navController?.navigate("usageRulesScreen")
         }
     }
 }

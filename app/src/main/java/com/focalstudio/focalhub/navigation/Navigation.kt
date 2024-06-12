@@ -20,6 +20,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.focalstudio.focalhub.view.activities.AppRulesScreen
+import com.focalstudio.focalhub.view.activities.EditAppUsageScreen
+import com.focalstudio.focalhub.view.viewModel.AppUsageViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -28,6 +31,7 @@ fun Navigation(lifecycleOwner: LifecycleOwner) {
     val homeScreenViewModel: HomeScreenViewModel = viewModel()
     val rulesManagerViewModel: RulesManagerViewModel = viewModel()
     val settingsViewModel: SettingsViewModel = viewModel()
+    val appUsageViewModel: AppUsageViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = "mainScreen") {
         composable("mainScreen") {
@@ -68,6 +72,24 @@ fun Navigation(lifecycleOwner: LifecycleOwner) {
                 val rule = rulesManagerViewModel.getRuleById(ruleId)
 
                 EditRuleScreen(navController, rulesManagerViewModel, rule, context = navController.context)
+            } else {
+                // TODO
+            }
+        }
+        composable("usageRulesScreen") {
+            AppRulesScreen(navController, appUsageViewModel)
+        }
+        composable(
+            route = "editUsageRule/{ruleId}",
+            arguments = listOf(navArgument("usageRuleId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val ruleId = backStackEntry.arguments?.getInt("usageRuleId")
+            if (ruleId != null) {
+                val rule = appUsageViewModel.getUsageRuleById(ruleId)
+                if (rule != null)
+                {
+                EditAppUsageScreen(navController, appUsageViewModel, rule, context = navController.context)
+                }
             } else {
                 // TODO
             }

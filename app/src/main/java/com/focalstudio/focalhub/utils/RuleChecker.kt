@@ -1,11 +1,11 @@
 package com.focalstudio.focalhub.utils
 
-import com.focalstudio.focalhub.data.DisplayRuleRepository
+import com.focalstudio.focalhub.data.RuleRepository
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.model.DisplayRule
 import java.util.Calendar
 
-suspend fun applyDisplayRules(apps: List<App>, ruleRepository: DisplayRuleRepository): List<App> {
+suspend fun applyDisplayRules(apps: List<App>, ruleRepository: RuleRepository): List<App> {
     val displayRules = ruleRepository.getRules()
 
     val filteredApps = mutableListOf<App>()
