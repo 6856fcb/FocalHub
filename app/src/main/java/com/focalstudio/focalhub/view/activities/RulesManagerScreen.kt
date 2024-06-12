@@ -149,11 +149,13 @@ fun RulesManagerScreen(navController: NavController, viewModel: RulesManagerView
                     action = {
                         if (!rule.isRecurring) {
                             RadioButton(
+                                //TODO: This is very buggy and will randomly set other rules to active
                                 selected = isActive,
                                 onClick = {
                                     isActive = !isActive
                                     viewModel.updateRuleIsActive(rule.id, isActive)
-                                    if (isEndTimeSet && isActive) {viewModel.checkActiveRules()}
+                                    if (isEndTimeSet && isActive) {
+                                        isRuleActive(rule)}
                                 }
                             )
                         } else {
