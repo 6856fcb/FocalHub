@@ -1,5 +1,4 @@
 package com.focalstudio.focalhub.view.activities
-import AppSelectionDialog
 import RulesAppSelectionDialog
 import android.app.AlertDialog
 import android.app.TimePickerDialog
@@ -8,7 +7,6 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -263,12 +261,11 @@ fun EditRuleScreen(
                 RulesAppSelectionDialog(
                     viewModel = viewModel,
                     ruleId = rule.id,
-                    onDismissRequest = { showAppSelectionDialog = false },
-                    onConfirm = { selectedApps ->
-                        viewModel.updateRuleAppList(rule.id, selectedApps)
-                        showAppSelectionDialog = false
-                    }
-                )
+                    onDismissRequest = { showAppSelectionDialog = false }
+                ) { selectedApps ->
+                    viewModel.updateRuleAppList(rule.id, selectedApps)
+                    showAppSelectionDialog = false
+                }
             }
         }
     }

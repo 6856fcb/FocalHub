@@ -15,7 +15,7 @@ data class UsageRule(
         var isLinkedToDisplayRule: Boolean = false,
         @ColumnInfo(name = "linked_rule_id")
         var linkedRuleId: Int = 0,
-        var onlyImportApps: Boolean = true,
+        //var onlyImportApps: Boolean = true,
         var isCurrentlyActive: Boolean = false,
         var isManuallyDisabled: Boolean = false,
         var restrictUsageTimePerApp: Boolean = false,
@@ -25,7 +25,10 @@ data class UsageRule(
         var maxSessionDurationInSeconds: Int = 0,
         var restrictUntilEndTime: Boolean = false,
         var timeWindowStartTime: Date = Date(0),
-        var timeWindowEndTime: Date = Date(0)
+        var timeWindowEndTime: Date = Date(0),
+        var weekdays: List<Int> = listOf(),
+        var isRecurring: Boolean = false,
+        var isEndTimeSet: Boolean = false,
 )
 
 @Entity(tableName = "display_rules")
@@ -44,7 +47,7 @@ data class DisplayRule(
         var endTime: Date = Date(0),
         var weekdays: List<Int> = listOf(),
         @Ignore
-        var usageRule: UsageRule? = null
+        var usageRule: List<UsageRule?> = listOf()
 )
 
 @Dao
@@ -81,7 +84,7 @@ interface DisplayRuleDao {
         suspend fun getAllRules(): List<DisplayRule>
 
         @Query("SELECT * FROM display_rules WHERE id = :ruleId")
-        suspend fun getRuleById(ruleId: Int): DisplayRule
+        suspend fun getDisplayRuleById(ruleId: Int): DisplayRule
 }
 
 // Update DisplayRuleDatabase to include both entities

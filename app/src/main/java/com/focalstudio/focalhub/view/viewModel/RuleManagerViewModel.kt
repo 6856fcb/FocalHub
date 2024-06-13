@@ -22,7 +22,13 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
+import android.util.Log
+import com.focalstudio.focalhub.utils.isCurrentTimeAfterThisTime
+import com.focalstudio.focalhub.utils.isCurrentTimeBeforeThisTime
+import com.focalstudio.focalhub.utils.shouldDisplayRuleBeCurrentlyActive
 
+
+@RequiresApi(Build.VERSION_CODES.O)
 class RulesManagerViewModel(application: Application) : AndroidViewModel(application) {
     private val _appsList = mutableStateOf<List<App>>(emptyList())
     val appsList: State<List<App>> get() = _appsList
@@ -136,8 +142,19 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
         updateRuleField(ruleId) { it.copy(appList = newAppList) }
     }
 
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
     fun updateRuleIsActive(ruleId: Int, newIsActive: Boolean) {
-        updateRuleField(ruleId) { it.copy(isActive = newIsActive) }
+
+        val rule = getRuleById(ruleId)
+        if (rule.isEndTimeSet && !rule.isRecurring && !rule.isActive) {
+            if (isCurrentTimeBeforeThisTime(rule.endTime)) {
+            updateRuleField(ruleId) { it.copy(isActive = newIsActive)}
+            }
+        } else {
+            updateRuleField(ruleId) { it.copy(isActive = newIsActive) }
+        }
     }
 
     fun deleteRule(ruleId: Int) {
@@ -173,21 +190,12 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
     fun updateRuleIsRecurring(ruleId: Int, newIsRecurring: Boolean) {
         updateRuleField(ruleId) { rule ->
             val updatedRule = rule.copy(isRecurring = newIsRecurring)
-            val isActive = isRuleCurrentlyActive(updatedRule)
+            val isActive = shouldDisplayRuleBeCurrentlyActive(updatedRule)
             updatedRule.copy(isActive = isActive)
         }
     }
 
-    private fun isRuleCurrentlyActive(rule: DisplayRule): Boolean {
-        val currentTime = Calendar.getInstance().time
-        val currentDayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
 
-        val ruleStartTime = rule.startTime
-        val ruleEndTime = rule.endTime
-        val ruleDaysOfWeek = rule.weekdays
-
-        return (currentTime.after(ruleStartTime) && currentTime.before(ruleEndTime) && ruleDaysOfWeek.contains(currentDayOfWeek))
-    }
 
     fun updateRuleStartTime(ruleId: Int, startTime: Date) {
         updateRuleField(ruleId) { it.copy(startTime = startTime) }
@@ -201,6 +209,7 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
         updateRuleField(ruleId) { it.copy(weekdays = weekdays) }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun startPeriodicRuleCheck() {
         //TODO Might Run in background forever
         periodicRuleCheckJob?.cancel()
@@ -215,12 +224,11 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun checkActiveRules() {
         _rules.value.forEach { rule ->
-            val isActive = isRuleCurrentlyActive(rule)
-            if (isActive != rule.isActive) {
-                updateRuleIsActive(rule.id, isActive)
-            }
+            val isActive = shouldDisplayRuleBeCurrentlyActive(rule)
+            updateRuleIsActive(rule.id, isActive)
         }
     }
 

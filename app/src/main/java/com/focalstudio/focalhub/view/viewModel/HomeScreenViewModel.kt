@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -18,9 +19,13 @@ import androidx.lifecycle.viewModelScope
 import com.focalstudio.focalhub.data.RuleRepository
 import com.focalstudio.focalhub.data.RuleRepositoryProvider
 import com.focalstudio.focalhub.data.model.App
+import com.focalstudio.focalhub.data.model.DisplayRule
 import com.focalstudio.focalhub.utils.applyDisplayRules
+import com.focalstudio.focalhub.utils.shouldDisplayRuleBeCurrentlyActive
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class HomeScreenViewModel(application: Application) : AndroidViewModel(application), LifecycleObserver {
@@ -34,7 +39,8 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
     val isVibrationEnabled: State<Boolean> get() = _isVibrationEnabled
 
     private val ruleRepository: RuleRepository = RuleRepositoryProvider.getInstance(application.applicationContext)
-
+    private val _rules = MutableStateFlow<List<DisplayRule>>(emptyList())
+    private val rules: StateFlow<List<DisplayRule>> get() = _rules
     init {
         observeRuleChanges()
         loadApps()
@@ -46,6 +52,21 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
             ruleRepository.setRuleChangeListener {
                 loadApps()
             }
+        }
+    }
+
+    private fun loadRules() {
+        viewModelScope.launch {
+            _rules.value = ruleRepository.getRules()
+        }
+    }
+
+    private fun updateRulesState() {
+        for (rule in rules.value) {
+            val isActive = shouldDisplayRuleBeCurrentlyActive(rule)
+            Log.d(rule.id.toString(), rule.name)
+            ruleRepository.updateRuleIsActive(rule.id, isActive)
+            rule.isActive = isActive
         }
     }
 
@@ -66,7 +87,9 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
                         )
                     }
 
-                val filteredApps = applyDisplayRules(apps, ruleRepository)
+                loadRules()
+                updateRulesState()
+                val filteredApps = applyDisplayRules(apps, rules.value)
 
                 _appsList.value = filteredApps
             } catch (e: Exception) {
@@ -91,6 +114,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
     private fun startPeriodicRuleCheck() {
         periodicRuleCheckJob = viewModelScope.launch {
             while (true) {
+
                 loadApps()
                 delay(60000) // Check every 60 seconds
             }

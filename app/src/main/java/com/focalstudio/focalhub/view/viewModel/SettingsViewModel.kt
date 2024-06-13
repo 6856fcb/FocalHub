@@ -31,8 +31,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             // Load general settings
             _generalSettingsList.value = listOf(
-                SettingItem("Manage Rules", "Configure and manage rules") { handleSettingClick("Manage Rules") },
-                SettingItem("Manage Apps", "Manage installed applications") { handleSettingClick("Manage Apps") },
+                SettingItem("Manage Rules", "Set rules for dynamic app selection") { handleSettingClick("Manage Rules") },
+                SettingItem("Manage Apps", "Restrict App Usage Times") { handleSettingClick("Manage Apps") },
                 SettingItem("Backup Settings", "Backup your settings data") { handleSettingClick("Backup Settings") }
             )
             // Load account settings

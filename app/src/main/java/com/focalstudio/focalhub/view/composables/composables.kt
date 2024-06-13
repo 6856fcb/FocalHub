@@ -23,7 +23,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -37,12 +36,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
-import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.runtime.*
-import androidx.lifecycle.ViewModel
 import com.focalstudio.focalhub.view.viewModel.AppUsageViewModel
+import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.O)

@@ -3,28 +3,20 @@ package com.focalstudio.focalhub.utils
 import com.focalstudio.focalhub.data.RuleRepository
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.model.DisplayRule
-import java.util.Calendar
+import com.focalstudio.focalhub.data.model.UsageRule
 
-suspend fun applyDisplayRules(apps: List<App>, ruleRepository: RuleRepository): List<App> {
-    val displayRules = ruleRepository.getRules()
 
-    val filteredApps = mutableListOf<App>()
+fun getFilteredApps (
 
-    if (displayRules.isEmpty()) {
-        return apps
-    }
+    allApps: List<App>,
+    displayRules: List<DisplayRule>
 
-    for (rule in displayRules) {
+): List<App>{
 
-        val isActive = isRuleActive(rule)
-
-        ruleRepository.updateRuleIsActive(rule.id, isActive)
-        rule.isActive = isActive
-    }
-
-    // Find active blacklisted and whitelisted apps
     val blacklistedApps = mutableSetOf<String>()
     val whitelistedApps = mutableSetOf<String>()
+
+    // Add apps to corresponding list
     for (rule in displayRules) {
         if (rule.isActive) {
             if (rule.isBlacklist) {
@@ -35,47 +27,73 @@ suspend fun applyDisplayRules(apps: List<App>, ruleRepository: RuleRepository): 
         }
     }
 
-    // Apply priorities
+    val filteredApps = mutableListOf<App>()
+
+    // Apply display priorities in order
     if (blacklistedApps.isNotEmpty()) {
-        for (app in apps) {
+        for (app in allApps) {
             if (blacklistedApps.contains(app.packageName)) {
-                // Block blacklisted apps
+                // 1.) Always Block blacklisted apps -> Don't show
                 continue
 
             } else if (whitelistedApps.contains(app.packageName)) {
-                // Allow whitelisted apps
+                // 2.) If not blacklisted check if app is whitelisted -> Show App
                 filteredApps.add(app)
 
             } else if (whitelistedApps.isEmpty())
-            // No whitelisted items but item not in blacklist either
+            // 3.) No whitelisted items found and app not blocked -> Show App
             {filteredApps.add(app)}
         }
     } else {
         // No blacklisted apps, allow only whitelisted apps
-        for (app in apps) {
+        for (app in allApps) {
             if (whitelistedApps.contains(app.packageName)) {
                 // Allow whitelisted apps
                 filteredApps.add(app)
             }
         }
     }
+    return filteredApps
+}
+fun applyDisplayRules(apps: List<App>, displayRules: List<DisplayRule>): List<App> {
 
+    if (displayRules.isEmpty()) {return apps} // Default Rule applies
+
+    val filteredApps = getFilteredApps(apps, displayRules)
     return filteredApps.ifEmpty { apps }
-
 }
 
-fun isRuleActive (rule: DisplayRule): Boolean {
-    var result = rule.isActive
-    val currentTime = Calendar.getInstance().time
-    val currentDayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
-    if (rule.isRecurring && !rule.isDisabled) {
-        result = currentTime.after(rule.startTime) &&
-                currentTime.before(rule.endTime) &&
-                rule.weekdays.contains(currentDayOfWeek)
+fun shouldDisplayRuleBeCurrentlyActive (rule: DisplayRule): Boolean {
+
+    return if (rule.isRecurring && !rule.isDisabled) {
+
+        isInTimeAndDayWindow(rule.startTime, rule.endTime, rule.weekdays)
+
+    } else if (rule.isEndTimeSet && rule.isActive && !rule.isRecurring) {
+
+        isCurrentTimeBeforeThisTime(rule.endTime)
+
+    } else {
+        rule.isActive
     }
-    if (!rule.isRecurring && rule.isActive && rule.isEndTimeSet) {
-        result = currentTime.before(rule.endTime)
-    }
-    return result
 }
+
+fun shouldNonLinkedUsageRuleBeCurrentlyActive (rule: UsageRule): Boolean {
+
+    // Maybe one function for both rule types?
+
+    return if (rule.isRecurring && !rule.isManuallyDisabled) {
+
+        isInTimeAndDayWindow(rule.timeWindowStartTime, rule.timeWindowEndTime, rule.weekdays)
+
+    } else if (rule.isEndTimeSet && rule.isCurrentlyActive && !rule.isRecurring) {
+
+        isCurrentTimeBeforeThisTime(rule.timeWindowEndTime)
+
+    } else {
+        rule.isCurrentlyActive
+    }
+}
+
+
 

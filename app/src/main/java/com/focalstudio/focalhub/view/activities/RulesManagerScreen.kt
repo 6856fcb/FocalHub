@@ -28,7 +28,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.alorma.compose.settings.ui.SettingsMenuLink
-import com.focalstudio.focalhub.utils.isRuleActive
 import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
 import java.text.DateFormat
 
@@ -149,13 +148,10 @@ fun RulesManagerScreen(navController: NavController, viewModel: RulesManagerView
                     action = {
                         if (!rule.isRecurring) {
                             RadioButton(
-                                //TODO: This is very buggy and will randomly set other rules to active
                                 selected = isActive,
                                 onClick = {
                                     isActive = !isActive
                                     viewModel.updateRuleIsActive(rule.id, isActive)
-                                    if (isEndTimeSet && isActive) {
-                                        isRuleActive(rule)}
                                 }
                             )
                         } else {

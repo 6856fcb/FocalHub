@@ -1,5 +1,6 @@
 package com.focalstudio.focalhub.data
 
+import android.util.Log
 import androidx.room.TypeConverter
 import java.util.Date
 
@@ -16,6 +17,7 @@ class Converters {
 
     @TypeConverter
     fun fromIntList(value: String): List<Int> {
+        Log.d(value, "checkpoint")
         return value.split(",").map { it.toInt() }
     }
 

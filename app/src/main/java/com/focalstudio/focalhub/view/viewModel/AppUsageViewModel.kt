@@ -11,6 +11,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.room.ColumnInfo
+import com.focalstudio.focalhub.data.RuleRepository
 import com.focalstudio.focalhub.data.RuleRepositoryProvider
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.model.UsageRule
@@ -93,7 +94,7 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
             ruleMode = 0,
             isLinkedToDisplayRule = false,
             linkedRuleId = 0,
-            onlyImportApps = true,
+            //onlyImportApps = true,
             isCurrentlyActive = false,
             isManuallyDisabled = false,
             restrictUsageTimePerApp = false,
@@ -103,7 +104,9 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
             maxSessionDurationInSeconds = 0,
             restrictUntilEndTime = false,
             timeWindowStartTime = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant()),
-            timeWindowEndTime = Date.from(endOfDay.minusHours(1).atZone(ZoneId.systemDefault()).toInstant())
+            timeWindowEndTime = Date.from(endOfDay.minusHours(1).atZone(ZoneId.systemDefault()).toInstant()),
+            isRecurring = false,
+            isEndTimeSet = false
         )
     }
     private fun loadRules() {
@@ -151,10 +154,6 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
 
     fun setLinkedRuleId(ruleId: Int, linkedId: Int) {
         updateRuleField(ruleId) { it.copy(linkedRuleId = linkedId) }
-    }
-
-    fun setOnlyImportApps(ruleId: Int, onlyImport: Boolean) {
-        updateRuleField(ruleId) { it.copy(onlyImportApps = onlyImport) }
     }
 
     fun setIsCurrentlyActive(ruleId: Int, isActive: Boolean) {
