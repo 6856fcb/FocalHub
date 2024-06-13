@@ -1,6 +1,8 @@
 package com.focalstudio.focalhub.view.viewModel
 
 import android.app.Application
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
@@ -37,7 +39,28 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
         loadUsageRules()
 
     }
+    private fun loadApps() {
+        viewModelScope.launch {
+            try {
+                val pm: PackageManager = getApplication<Application>().packageManager
+                val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
+                    addCategory(Intent.CATEGORY_LAUNCHER)
+                }
+                val apps = pm.queryIntentActivities(mainIntent, 0)
+                    .map { resolveInfo ->
+                        App(
+                            name = resolveInfo.loadLabel(pm).toString(),
+                            packageName = resolveInfo.activityInfo.packageName,
+                            icon = resolveInfo.loadIcon(pm)
+                        )
+                    }
 
+                _appsList.value = apps
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
     fun setNavController(controller: NavController) {
         navController = controller
     }

@@ -42,24 +42,19 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
+import com.focalstudio.focalhub.view.viewModel.AppUsageViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppSelectionDialog(
-    viewModel: RulesManagerViewModel,
-    ruleId: Int,
+    allApps: List<App>,
+    initialSelectedApps: List<String>,
     onDismissRequest: () -> Unit,
     onConfirm: (List<String>) -> Unit
 ) {
-    val allApps by remember { viewModel.appsList } // Use the state from ViewModel
-    val rule = viewModel.getRuleById(ruleId)
-    val selectedApps = remember { mutableStateListOf<String>() }
+    val selectedApps = remember { mutableStateListOf<String>().apply { addAll(initialSelectedApps) } }
     val searchQuery = remember { mutableStateOf(TextFieldValue()) }
-
-    LaunchedEffect(rule) {
-        rule?.appList?.let { selectedApps.addAll(it) }
-    }
 
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
@@ -73,20 +68,17 @@ fun AppSelectionDialog(
                     label = { Text(text = "Search App") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    //placeholder = { Text(text = "Search App")}
+                        .padding(bottom = 8.dp)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 LazyColumn(
-                    modifier = Modifier.weight(1f) // Add weight to occupy available space
+                    modifier = Modifier.weight(1f)
                 ) {
                     val filteredApps: List<App> = allApps.filter { app ->
                         app.name.contains(searchQuery.value.text, ignoreCase = true)
                     }
 
-
-
-                    items(filteredApps.sortedBy { it.name }) { app -> // Sort apps alphabetically
+                    items(filteredApps.sortedBy { it.name }) { app ->
                         AppItem(
                             app = app,
                             isSelected = selectedApps.contains(app.packageName),
@@ -105,7 +97,7 @@ fun AppSelectionDialog(
                     horizontalArrangement = Arrangement.End,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(0.1f) // Add weight to occupy available space
+                        .weight(0.1f)
                 ) {
                     TextButton(onClick = onDismissRequest) {
                         Text("Cancel")
@@ -118,8 +110,48 @@ fun AppSelectionDialog(
             }
         }
     }
-
 }
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun RulesAppSelectionDialog(
+    viewModel: RulesManagerViewModel,
+    ruleId: Int,
+    onDismissRequest: () -> Unit,
+    onConfirm: (List<String>) -> Unit
+) {
+    val allApps by remember { viewModel.appsList }
+    val rule = viewModel.getRuleById(ruleId)
+    val initialSelectedApps = rule.appList ?: emptyList()
+
+    AppSelectionDialog(
+        allApps = allApps,
+        initialSelectedApps = initialSelectedApps,
+        onDismissRequest = onDismissRequest,
+        onConfirm = onConfirm
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun AppUsageSelectionDialog(
+    viewModel: AppUsageViewModel,
+    ruleId: Int,
+    onDismissRequest: () -> Unit,
+    onConfirm: (List<String>) -> Unit
+) {
+    val allApps by remember { viewModel.appsList }
+    val rule = viewModel.getUsageRuleById(ruleId)
+    val initialSelectedApps = rule?.appList ?: emptyList()
+
+    AppSelectionDialog(
+        allApps = allApps,
+        initialSelectedApps = initialSelectedApps,
+        onDismissRequest = onDismissRequest,
+        onConfirm = onConfirm
+    )
+}
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable

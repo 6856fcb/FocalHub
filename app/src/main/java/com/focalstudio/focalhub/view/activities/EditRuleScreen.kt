@@ -1,5 +1,6 @@
 package com.focalstudio.focalhub.view.activities
 import AppSelectionDialog
+import RulesAppSelectionDialog
 import android.app.AlertDialog
 import android.app.TimePickerDialog
 import android.content.Context
@@ -259,7 +260,7 @@ fun EditRuleScreen(
             }
 
             if (showAppSelectionDialog) {
-                AppSelectionDialog(
+                RulesAppSelectionDialog(
                     viewModel = viewModel,
                     ruleId = rule.id,
                     onDismissRequest = { showAppSelectionDialog = false },
