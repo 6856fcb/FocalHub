@@ -106,7 +106,8 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
             timeWindowStartTime = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant()),
             timeWindowEndTime = Date.from(endOfDay.minusHours(1).atZone(ZoneId.systemDefault()).toInstant()),
             isRecurring = false,
-            isEndTimeSet = false
+            isEndTimeSet = false,
+            weekdays = listOf(1,2,3,4)
         )
     }
     private fun loadRules() {
