@@ -3,15 +3,17 @@ package com.focalstudio.focalhub.view.viewModel
 import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import androidx.room.ColumnInfo
-import com.focalstudio.focalhub.data.RuleRepository
 import com.focalstudio.focalhub.data.RuleRepositoryProvider
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.model.UsageRule
@@ -22,6 +24,9 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
+import androidx.compose.ui.platform.LocalContext
+import com.focalstudio.focalhub.data.model.DisplayRule
+import com.focalstudio.focalhub.utils.log
 
 class AppUsageViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -37,8 +42,9 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
     private var periodicRuleCheckJob: Job? = null
 
     init {
+        loadApps()
+        loadRules()
         loadUsageRules()
-
     }
     private fun loadApps() {
         viewModelScope.launch {
@@ -90,7 +96,7 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
         return UsageRule(
             id = availableId,
             name = "New Usage Rule$availableId",
-            appList = emptyList<String>(),
+            appList = emptyList(),
             ruleMode = 0,
             isLinkedToDisplayRule = false,
             linkedRuleId = 0,
@@ -102,11 +108,10 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
             useMaxSessionTimes = false,
             displaySessionDurationDialog = false,
             maxSessionDurationInSeconds = 0,
-            restrictUntilEndTime = false,
+            isRestrictedUntilEndTime = false,
             timeWindowStartTime = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant()),
             timeWindowEndTime = Date.from(endOfDay.minusHours(1).atZone(ZoneId.systemDefault()).toInstant()),
             isRecurring = false,
-            isEndTimeSet = false,
             weekdays = listOf(1,2,3,4)
         )
     }
@@ -142,8 +147,10 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setRuleAppList(ruleId: Int, newAppList: List<String>) {
-        updateRuleField(ruleId) { it.copy(appList = newAppList) }
+        val filteredAppList = newAppList.filter { it.isNotEmpty() }
+        updateRuleField(ruleId) { it.copy(appList = filteredAppList) }
     }
+
 
     fun setRuleMode(ruleId: Int, newMode: Int) {
         updateRuleField(ruleId) { it.copy(ruleMode = newMode) }
@@ -186,7 +193,7 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setRestrictUntilEndTime(ruleId: Int, restrict: Boolean) {
-        updateRuleField(ruleId) { it.copy(restrictUntilEndTime = restrict) }
+        updateRuleField(ruleId) { it.copy(isRestrictedUntilEndTime = restrict) }
     }
 
     fun setTimeWindowStartTime(ruleId: Int, startTime: Date) {
@@ -196,10 +203,50 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
     fun setTimeWindowEndTime(ruleId: Int, endTime: Date) {
         updateRuleField(ruleId) { it.copy(timeWindowEndTime = endTime) }
     }
+    fun deleteUsageRule(ruleId: Int) {
+        viewModelScope.launch {
+            // Delete the rule from the repository
+            ruleRepository.deleteUsageRule(ruleId)
 
-    private fun updateRuleField(ruleId: Int, update: (UsageRule) -> UsageRule) {
-        _usageRules.value = _usageRules.value.map {
-            if (it.id == ruleId) update(it) else it
+            // Update the _rules list after the rule is deleted
+            val currentRules = _usageRules.value.toMutableList()
+            val index = currentRules.indexOfFirst { it.id == ruleId }
+            if (index != -1) {
+                currentRules.removeAt(index)
+                _usageRules.value = currentRules
+            }
+
+            // Navigate back
+            navController?.popBackStack()
         }
     }
+
+
+    private fun updateRuleField(ruleId: Int, update: (UsageRule) -> UsageRule) {
+        val currentRules = _usageRules.value.toMutableList()
+        val index = currentRules.indexOfFirst { it.id == ruleId }
+        if (index != -1) {
+            currentRules[index] = update(currentRules[index])
+            _usageRules.value = currentRules
+            viewModelScope.launch {
+                ruleRepository.updateUsageRule(currentRules[index])
+            }
+        }
+        //loadUsageRules()
+    }
+
+    @Composable
+    fun getIconForFirstAppInUsageRule(usageRule: UsageRule): Drawable {
+
+        val app = appsList.value.find { usageRule.appList.first() == it.packageName }
+        val context = LocalContext.current
+        return app?.icon ?: AppCompatResources.getDrawable(context, android.R.drawable.sym_def_app_icon)!!
+    }
+
+    fun getAppNameForFirstAppInUsageRule(usageRule: UsageRule) : String {
+        val app = appsList.value.find { usageRule.appList.first() == it.packageName }
+        return app?.name ?: "Rule for App"
+    }
+
+
 }

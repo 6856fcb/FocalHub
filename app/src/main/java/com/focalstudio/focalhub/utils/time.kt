@@ -16,7 +16,7 @@ fun isTodayInThisWeekdayList(weekdays : List<Int>) : Boolean {
     return weekdays.contains(currentDayOfWeek)
 }
 
-fun isInTimeAndDayWindow(timeStart: Date, timeEnd: Date, weekdays: List<Int>): Boolean {
+fun isCurrentTimeAndDayInThisWindow(timeStart: Date, timeEnd: Date, weekdays: List<Int>): Boolean {
     return isCurrentTimeAfterThisTime(timeStart)
             && isCurrentTimeBeforeThisTime(timeEnd)
             && isTodayInThisWeekdayList(weekdays)

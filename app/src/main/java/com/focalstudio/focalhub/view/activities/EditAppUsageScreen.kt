@@ -37,6 +37,15 @@ fun EditAppUsageScreen(
     context: Context
 ) {
     var showAppSelectionDialog by remember { mutableStateOf(false) }
+    var name by remember { mutableStateOf(usageRule.name) }
+    var isCurrentlyActive by remember { mutableStateOf(usageRule.isCurrentlyActive) }
+    var isRecurring by remember { mutableStateOf(usageRule.isRecurring) }
+    var isDisabled by remember { mutableStateOf(usageRule.isManuallyDisabled) }
+    var isEndTimeSet by remember { mutableStateOf(usageRule.isRestrictedUntilEndTime) }
+    var selectedStartTime by remember { mutableStateOf(usageRule.timeWindowStartTime) }
+    var selectedEndTime by remember { mutableStateOf(usageRule.timeWindowEndTime) }
+    var selectedWeekdays by remember { mutableStateOf(usageRule.weekdays) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -49,7 +58,7 @@ fun EditAppUsageScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { /*viewModel.deleteUsageRule(usageRule.id) */}) {
+            FloatingActionButton(onClick = { viewModel.deleteUsageRule(usageRule.id) }) {
                 Icon(Icons.Filled.Delete, contentDescription = "Delete Rule")
             }
         }
@@ -59,6 +68,22 @@ fun EditAppUsageScreen(
             title = { Text(usageRule.name) },
             contentPadding = paddingValues,
         ) {
+
+
+
+
+            SettingsSwitch(
+                state = isCurrentlyActive,
+                title = { Text(text = "Rule active") },
+                subtitle = {},
+                modifier = Modifier,
+                enabled = !isRecurring,
+                icon = {},
+                onCheckedChange = { newState: Boolean ->
+                    isCurrentlyActive = newState
+                    viewModel.setIsCurrentlyActive(ruleId = usageRule.id, newState)
+                },
+            )
             SettingsMenuLink(
                 title = { Text(text = "Change Rule name") },
                 subtitle = {},
@@ -83,11 +108,12 @@ fun EditAppUsageScreen(
                 AppUsageSelectionDialog(
                     viewModel = viewModel,
                     ruleId = usageRule.id,
-                    onDismissRequest = { showAppSelectionDialog = false }
-                ) { selectedApps ->
-                    viewModel.setRuleAppList(usageRule.id, selectedApps)
-                    showAppSelectionDialog = false
-                }
+                    onDismissRequest = { showAppSelectionDialog = false },
+                    onConfirm = { selectedApps ->
+                        viewModel.setRuleAppList(usageRule.id, selectedApps)
+                        showAppSelectionDialog = false
+                    }
+                )
             }
         }
     }

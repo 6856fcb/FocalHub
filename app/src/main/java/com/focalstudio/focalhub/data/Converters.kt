@@ -17,7 +17,6 @@ class Converters {
 
     @TypeConverter
     fun fromIntList(value: String): List<Int> {
-        Log.d(value, "checkpoint")
         return value.split(",").map { it.toInt() }
     }
 

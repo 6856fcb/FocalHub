@@ -20,10 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.Calendar
 import java.util.Date
-import android.util.Log
-import com.focalstudio.focalhub.utils.isCurrentTimeAfterThisTime
 import com.focalstudio.focalhub.utils.isCurrentTimeBeforeThisTime
 import com.focalstudio.focalhub.utils.shouldDisplayRuleBeCurrentlyActive
 
@@ -51,7 +48,7 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
 
     private fun loadRules() {
         viewModelScope.launch {
-            _rules.value = ruleRepository.getRules()
+            _rules.value = ruleRepository.getDisplayRules()
 
         }
     }
@@ -115,7 +112,7 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
             currentRules[index] = update(currentRules[index])
             _rules.value = currentRules
             viewModelScope.launch {
-                ruleRepository.updateRule(currentRules[index])
+                ruleRepository.updateDisplayRule(currentRules[index])
             }
         }
     }
@@ -128,7 +125,7 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
         _rules.value = currentRules + newRule
 
         viewModelScope.launch {
-            ruleRepository.addRule(newRule)
+            ruleRepository.addDisplayRule(newRule)
         }
 
         navController?.navigate("editRule/${newRule.id}")
@@ -160,7 +157,7 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
     fun deleteRule(ruleId: Int) {
         viewModelScope.launch {
             // Delete the rule from the repository
-            ruleRepository.deleteRule(ruleId)
+            ruleRepository.deleteDisplayRule(ruleId)
 
             // Update the _rules list after the rule is deleted
             val currentRules = _rules.value.toMutableList()

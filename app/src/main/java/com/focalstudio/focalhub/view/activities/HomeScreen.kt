@@ -32,15 +32,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -112,7 +110,9 @@ fun AppItem(app: App, context: Context, viewModel: HomeScreenViewModel) {
             .width(80.dp)
             .clickable(
                 onClick = {
-                    viewModel.appIconClicked(app, context)
+                    viewModel.viewModelScope.launch {
+                        viewModel.appIconClicked(app, context)
+                    }
                 }
             ),
         horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally

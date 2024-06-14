@@ -9,12 +9,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 interface RuleRepository {
-    suspend fun getRules(): List<DisplayRule>
-    fun addRule(rule: DisplayRule)
-    fun updateRule(rule: DisplayRule)
-    fun deleteRule(ruleId: Int)
+    suspend fun getDisplayRules(): List<DisplayRule>
+    fun addDisplayRule(rule: DisplayRule)
+    fun updateDisplayRule(rule: DisplayRule)
+    fun deleteDisplayRule(ruleId: Int)
     fun setRuleChangeListener(listener: () -> Unit)
-    fun updateRuleIsActive(ruleId: Int, isActive: Boolean)
+    fun updateDisplayRuleIsActive(ruleId: Int, isActive: Boolean)
     suspend fun getUsageRules(): List<UsageRule>
     fun addUsageRule(usageRule: UsageRule)
     fun updateUsageRule(usageRule: UsageRule)
@@ -78,23 +78,23 @@ class RoomRuleRepository(private val context: Context) : RuleRepository {
         }
     }
 
-    override suspend fun getRules(): List<DisplayRule> {
+    override suspend fun getDisplayRules(): List<DisplayRule> {
         return this.displayRuleDao.getAllRules()
     }
 
-    override fun addRule(rule: DisplayRule) {
+    override fun addDisplayRule(rule: DisplayRule) {
         ioScope.launch {
             this@RoomRuleRepository.displayRuleDao.insert(rule)
         }
     }
 
-    override fun updateRule(rule: DisplayRule) {
+    override fun updateDisplayRule(rule: DisplayRule) {
         ioScope.launch {
             this@RoomRuleRepository.displayRuleDao.update(rule)
         }
     }
 
-    override fun deleteRule(ruleId: Int) {
+    override fun deleteDisplayRule(ruleId: Int) {
         ioScope.launch {
             this@RoomRuleRepository.displayRuleDao.delete(
                 this@RoomRuleRepository.displayRuleDao.getDisplayRuleById(
@@ -109,7 +109,7 @@ class RoomRuleRepository(private val context: Context) : RuleRepository {
         //
     }
 
-    override fun updateRuleIsActive(ruleId: Int, isActive: Boolean) {
+    override fun updateDisplayRuleIsActive(ruleId: Int, isActive: Boolean) {
         ioScope.launch {
             val rule = this@RoomRuleRepository.displayRuleDao.getDisplayRuleById(ruleId)
             rule.isActive = isActive

@@ -1,6 +1,5 @@
 package com.focalstudio.focalhub.utils
 
-import com.focalstudio.focalhub.data.RuleRepository
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.model.DisplayRule
 import com.focalstudio.focalhub.data.model.UsageRule
@@ -67,7 +66,7 @@ fun shouldDisplayRuleBeCurrentlyActive (rule: DisplayRule): Boolean {
 
     return if (rule.isRecurring && !rule.isDisabled) {
 
-        isInTimeAndDayWindow(rule.startTime, rule.endTime, rule.weekdays)
+        isCurrentTimeAndDayInThisWindow(rule.startTime, rule.endTime, rule.weekdays)
 
     } else if (rule.isEndTimeSet && rule.isActive && !rule.isRecurring) {
 
@@ -84,9 +83,9 @@ fun shouldNonLinkedUsageRuleBeCurrentlyActive (rule: UsageRule): Boolean {
 
     return if (rule.isRecurring && !rule.isManuallyDisabled) {
 
-        isInTimeAndDayWindow(rule.timeWindowStartTime, rule.timeWindowEndTime, rule.weekdays)
+        isCurrentTimeAndDayInThisWindow(rule.timeWindowStartTime, rule.timeWindowEndTime, rule.weekdays)
 
-    } else if (rule.isEndTimeSet && rule.isCurrentlyActive && !rule.isRecurring) {
+    } else if (rule.isRestrictedUntilEndTime && rule.isCurrentlyActive && !rule.isRecurring) {
 
         isCurrentTimeBeforeThisTime(rule.timeWindowEndTime)
 

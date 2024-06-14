@@ -11,17 +11,16 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.focalstudio.focalhub.data.RuleRepository
 import com.focalstudio.focalhub.data.RuleRepositoryProvider
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.model.DisplayRule
+import com.focalstudio.focalhub.data.model.UsageRule
 import com.focalstudio.focalhub.utils.applyDisplayRules
+import com.focalstudio.focalhub.utils.log
 import com.focalstudio.focalhub.utils.shouldDisplayRuleBeCurrentlyActive
+import com.focalstudio.focalhub.utils.shouldNonLinkedUsageRuleBeCurrentlyActive
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,10 +40,13 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
     private val ruleRepository: RuleRepository = RuleRepositoryProvider.getInstance(application.applicationContext)
     private val _rules = MutableStateFlow<List<DisplayRule>>(emptyList())
     private val rules: StateFlow<List<DisplayRule>> get() = _rules
+
+    private val _usageRules = MutableStateFlow<List<UsageRule>>(emptyList())
+    private val usageRules: StateFlow<List<UsageRule>> get() = _usageRules
+
     init {
         observeRuleChanges()
         loadApps()
-        //startPeriodicRuleCheck()
     }
 
     private fun observeRuleChanges() {
@@ -57,7 +59,8 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun loadRules() {
         viewModelScope.launch {
-            _rules.value = ruleRepository.getRules()
+            _rules.value = ruleRepository.getDisplayRules()
+            _usageRules.value = ruleRepository.getUsageRules()
         }
     }
 
@@ -65,7 +68,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
         for (rule in rules.value) {
             val isActive = shouldDisplayRuleBeCurrentlyActive(rule)
             Log.d(rule.id.toString(), rule.name)
-            ruleRepository.updateRuleIsActive(rule.id, isActive)
+            ruleRepository.updateDisplayRuleIsActive(rule.id, isActive)
             rule.isActive = isActive
         }
     }
@@ -110,11 +113,9 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
         // Cancel rule check coroutine when viewModel is paused
         periodicRuleCheckJob?.cancel()
     }
-
     private fun startPeriodicRuleCheck() {
         periodicRuleCheckJob = viewModelScope.launch {
             while (true) {
-
                 loadApps()
                 delay(60000) // Check every 60 seconds
             }
@@ -122,11 +123,46 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun appIconClicked(app: App, context: Context) {
+    suspend fun appIconClicked(app: App, context: Context) {
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         val vibrationEffect = VibrationEffect.createOneShot(10, VibrationEffect.DEFAULT_AMPLITUDE)
         vibrator.vibrate(vibrationEffect)
 
+        tryAppLaunchAndApplyUsageRules(app, context)
+    }
+
+    private suspend fun tryAppLaunchAndApplyUsageRules(app: App, context: Context) {
+        loadRules()
+        if (usageRules.value.isNotEmpty()) {
+            var appFoundInARule = false
+
+            for (usageRule in usageRules.value) {
+                log(usageRule.appList)
+
+                if (usageRule.appList.contains(app.packageName)) {
+                    appFoundInARule = true
+
+                    if (shouldNonLinkedUsageRuleBeCurrentlyActive(usageRule) && !usageRule.isLinkedToDisplayRule) {
+                        // Apply Constraints -> app, usage rule
+                    } else if (usageRule.isLinkedToDisplayRule) {
+                        ruleRepository.getDisplayRuleById(usageRule.linkedRuleId)?.let {
+                            shouldDisplayRuleBeCurrentlyActive(it)
+                        }
+                        // Apply Constraints -> app, usage rule
+                    } else {
+                        launchApp(context, app)
+                    }
+                }
+            }
+            if (!appFoundInARule) {
+                launchApp(context, app)
+            }
+        } else {
+            launchApp(context, app)
+        }
+    }
+
+    private fun launchApp(context: Context, app: App) {
         val launchIntent = context.packageManager.getLaunchIntentForPackage(app.packageName)
         launchIntent?.let { context.startActivity(it) }
     }

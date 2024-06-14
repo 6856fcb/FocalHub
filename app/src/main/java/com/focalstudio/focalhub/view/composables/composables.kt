@@ -39,8 +39,11 @@ import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.runtime.*
+import androidx.lifecycle.viewModelScope
+import com.focalstudio.focalhub.utils.log
 import com.focalstudio.focalhub.view.viewModel.AppUsageViewModel
 import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
+import kotlinx.coroutines.launch
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -101,7 +104,8 @@ fun AppSelectionDialog(
                         Text("Cancel")
                     }
                     Spacer(modifier = Modifier.width(8.dp))
-                    TextButton(onClick = { onConfirm(selectedApps) }) {
+                    TextButton(onClick = { onConfirm(selectedApps)
+                    log(selectedApps.size, "OnConfirmCheckpoint")}) {
                         Text("Confirm")
                     }
                 }
@@ -226,7 +230,9 @@ fun SearchAppItem(app: App, context: Context, viewModel: HomeScreenViewModel) {
             .fillMaxWidth()
             .clickable(
                 onClick = {
-                    viewModel.appIconClicked(app, context)
+                    viewModel.viewModelScope.launch {
+                        viewModel.appIconClicked(app, context)
+                    }
                 }
             )
             .padding(8.dp),

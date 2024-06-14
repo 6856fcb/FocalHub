@@ -23,12 +23,11 @@ data class UsageRule(
         var useMaxSessionTimes: Boolean = false,
         var displaySessionDurationDialog: Boolean = false,
         var maxSessionDurationInSeconds: Int = 0,
-        var restrictUntilEndTime: Boolean = false,
+        var isRestrictedUntilEndTime: Boolean = false,
         var timeWindowStartTime: Date = Date(0),
         var timeWindowEndTime: Date = Date(0),
         var weekdays: List<Int> = listOf(),
         var isRecurring: Boolean = false,
-        var isEndTimeSet: Boolean = false,
 )
 
 @Entity(tableName = "display_rules")
