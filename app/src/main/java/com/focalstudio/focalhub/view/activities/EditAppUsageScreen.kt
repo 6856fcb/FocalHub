@@ -45,6 +45,7 @@ fun EditAppUsageScreen(
     var selectedStartTime by remember { mutableStateOf(usageRule.timeWindowStartTime) }
     var selectedEndTime by remember { mutableStateOf(usageRule.timeWindowEndTime) }
     var selectedWeekdays by remember { mutableStateOf(usageRule.weekdays) }
+    var isLinked by remember { mutableStateOf(usageRule.isLinkedToDisplayRule)}
 
     Scaffold(
         topBar = {
@@ -104,6 +105,10 @@ fun EditAppUsageScreen(
                     showAppSelectionDialog = true
                 },
             )
+            if (!isLinked) {
+                // time
+            }
+
             if (showAppSelectionDialog) {
                 AppUsageSelectionDialog(
                     viewModel = viewModel,
