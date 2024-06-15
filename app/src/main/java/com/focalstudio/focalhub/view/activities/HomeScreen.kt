@@ -141,11 +141,7 @@ fun AppItem(app: App, context: Context, viewModel: HomeScreenViewModel) {
             contentDescription = app.name,
             modifier = Modifier
                 .size(60.dp)
-                .background(
-                    color = Color.White,
-                    shape = androidx.compose.foundation.shape.CircleShape
-                ) // For ripple effect
-                .padding(0.dp)
+
         )
         Text(
             text = app.name,
