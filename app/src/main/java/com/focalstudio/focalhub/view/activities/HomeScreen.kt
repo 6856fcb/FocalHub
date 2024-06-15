@@ -30,38 +30,56 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import kotlinx.coroutines.launch
 
+
+
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController, context: Context, viewModel: HomeScreenViewModel, lifecycleOwner: LifecycleOwner) {
+   /*androidx.compose.material3.Surface {
+       modifier = Modifier.fillMaxSize().background(Color.Black)
+   }*/
+
+
+
+
     val apps by remember { mutableStateOf(viewModel.appsList) }
     var showAppSearchDialog by remember { mutableStateOf(false) }
     lifecycleOwner.lifecycle.addObserver(viewModel)
     Scaffold(
         topBar = {
+
             TopAppBar(
-                title = { Text("Home") },
+
+                title = { Text("Home",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 30.sp)},
                 actions = {
                     IconButton(onClick = { navController.navigate("settingsScreen") }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(Icons.Default.Settings, contentDescription = "Settings", Modifier.size(30.dp))
                     }
                 }
             )
         },
+
         floatingActionButton = {
             FloatingActionButton(onClick = { showAppSearchDialog = true }) {
-                Icon(Icons.Filled.Search, contentDescription = "Search Apps")
+                Icon(Icons.Filled.Search, contentDescription = "Search Apps", tint = Color.Magenta)
             }
+
         }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
@@ -93,7 +111,7 @@ fun AppGrid(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        modifier = Modifier.padding(8.dp, bottom = 32.dp)
+        modifier = Modifier.padding(5.dp, bottom = 10.dp)
     ) {
         itemsIndexed(apps.value) { _, app ->
             AppItem(app, context, viewModel)
@@ -106,7 +124,7 @@ fun AppGrid(
 fun AppItem(app: App, context: Context, viewModel: HomeScreenViewModel) {
     Column(
         modifier = Modifier
-            .padding(4.dp)
+            .padding(6.dp)
             .width(80.dp)
             .clickable(
                 onClick = {
@@ -122,13 +140,16 @@ fun AppItem(app: App, context: Context, viewModel: HomeScreenViewModel) {
             painter = painter,
             contentDescription = app.name,
             modifier = Modifier
-                .size(46.dp)
-                .background(color = Color.White, shape = androidx.compose.foundation.shape.CircleShape) // For ripple effect
+                .size(60.dp)
+                .background(
+                    color = Color.White,
+                    shape = androidx.compose.foundation.shape.CircleShape
+                ) // For ripple effect
                 .padding(0.dp)
         )
         Text(
             text = app.name,
-            fontSize = 12.sp,
+            fontSize = 14.sp,
             modifier = Modifier.padding(top = 4.dp)
         )
     }
