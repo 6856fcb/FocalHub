@@ -9,8 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.focalstudio.focalhub.navigation.Navigation
-import com.focalstudio.focalhub.utils.FocalHubTheme
-import androidx.lifecycle.lifecycleScope
+import com.focalstudio.focalhub.ui.FocalHubTheme
 
 class MainActivity : ComponentActivity() {
 
