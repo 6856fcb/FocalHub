@@ -34,15 +34,18 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
     private val _appsList = mutableStateOf<List<App>>(emptyList())
     val appsList: State<List<App>> get() = _appsList
 
+    private val _allAppsList = mutableStateOf<List<App>>(emptyList())
+    val allAppsList: State<List<App>> get() = _allAppsList
+
     private val _isVibrationEnabled = mutableStateOf(true)
     val isVibrationEnabled: State<Boolean> get() = _isVibrationEnabled
 
     private val ruleRepository: RuleRepository = RuleRepositoryProvider.getInstance(application.applicationContext)
     private val _rules = MutableStateFlow<List<DisplayRule>>(emptyList())
-    val rules: StateFlow<List<DisplayRule>> get() = _rules
+    private val rules: StateFlow<List<DisplayRule>> get() = _rules
 
     private val _usageRules = MutableStateFlow<List<UsageRule>>(emptyList())
-    val usageRules: StateFlow<List<UsageRule>> get() = _usageRules
+    private val usageRules: StateFlow<List<UsageRule>> get() = _usageRules
 
     init {
         observeRuleChanges()
@@ -95,6 +98,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
                     }
                 val filteredApps = applyDisplayRules(apps, rules.value)
                 _appsList.value = filteredApps
+                _allAppsList.value = apps
             } catch (e: Exception) {
                 e.printStackTrace()
             }

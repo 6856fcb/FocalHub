@@ -162,7 +162,7 @@ fun AppSearchDialog(
     context: Context,
     onDismissRequest: () -> Unit
 ) {
-    val allApps by remember { viewModel.appsList }
+    val allApps by remember { viewModel.allAppsList }
     val searchQuery = remember { mutableStateOf(TextFieldValue()) }
     val keyboardController = LocalSoftwareKeyboardController.current
 
