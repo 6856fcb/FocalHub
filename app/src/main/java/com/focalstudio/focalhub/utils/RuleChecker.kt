@@ -1,5 +1,6 @@
 package com.focalstudio.focalhub.utils
 
+import android.util.Log
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.model.DisplayRule
 import com.focalstudio.focalhub.data.model.UsageRule
@@ -65,11 +66,12 @@ fun applyDisplayRules(apps: List<App>, displayRules: List<DisplayRule>): List<Ap
 fun shouldDisplayRuleBeCurrentlyActive (rule: DisplayRule): Boolean {
 
     return if (rule.isRecurring && !rule.isDisabled) {
-
-        isCurrentTimeAndDayInThisWindow(rule.startTime, rule.endTime, rule.weekdays)
+        isCurrentTimeAndDayInThisWindow(
+            timeStart = rule.startTime,
+            timeEnd = rule.endTime,
+            weekdays = rule.weekdays)
 
     } else if (rule.isEndTimeSet && rule.isActive && !rule.isRecurring) {
-
         isCurrentTimeBeforeThisTime(rule.endTime)
 
     } else {

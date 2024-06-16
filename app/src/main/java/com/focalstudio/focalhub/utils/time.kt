@@ -1,5 +1,6 @@
 package com.focalstudio.focalhub.utils
 
+import java.text.DateFormat
 import java.util.Calendar
 import java.util.Date
 
@@ -9,7 +10,7 @@ fun isCurrentTimeBeforeThisTime(time: Date) : Boolean {
 }
 fun isCurrentTimeAfterThisTime(time: Date) : Boolean {
     val currentTime = Calendar.getInstance().time
-    return currentTime.before(time)
+    return currentTime.after(time)
 }
 fun isTodayInThisWeekdayList(weekdays : List<Int>) : Boolean {
     val currentDayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
