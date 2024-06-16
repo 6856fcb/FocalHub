@@ -24,7 +24,6 @@ import java.util.Date
 import com.focalstudio.focalhub.utils.isCurrentTimeBeforeThisTime
 import com.focalstudio.focalhub.utils.shouldDisplayRuleBeCurrentlyActive
 
-
 @RequiresApi(Build.VERSION_CODES.O)
 class RulesManagerViewModel(application: Application) : AndroidViewModel(application) {
     private val _appsList = mutableStateOf<List<App>>(emptyList())
@@ -49,7 +48,6 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
     private fun loadRules() {
         viewModelScope.launch {
             _rules.value = ruleRepository.getDisplayRules()
-
         }
     }
 
@@ -57,7 +55,6 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
     fun getRuleById(ruleId: Int): DisplayRule {
         return _rules.value.find { it.id == ruleId } ?: getDefaultRuleData()
     }
-
 
     private fun loadApps() {
         viewModelScope.launch {
@@ -99,7 +96,7 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
             isRecurring = false,
             startTime = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant()),
             endTime = Date.from(endOfDay.minusHours(1).atZone(ZoneId.systemDefault()).toInstant()),
-            weekdays = listOf(2,3,4,5,6),
+            weekdays = listOf(2, 3, 4, 5, 6),
             isDisabled = false,
             isEndTimeSet = false
         )
@@ -109,10 +106,11 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
         val currentRules = _rules.value.toMutableList()
         val index = currentRules.indexOfFirst { it.id == ruleId }
         if (index != -1) {
-            currentRules[index] = update(currentRules[index])
+            val updatedRule = update(currentRules[index])
+            currentRules[index] = updatedRule
             _rules.value = currentRules
             viewModelScope.launch {
-                ruleRepository.updateDisplayRule(currentRules[index])
+                ruleRepository.updateDisplayRule(updatedRule) // Update the rule in the repository
             }
         }
     }
@@ -139,18 +137,25 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
         updateRuleField(ruleId) { it.copy(appList = newAppList) }
     }
 
-
-
     @RequiresApi(Build.VERSION_CODES.O)
     fun updateRuleIsActive(ruleId: Int, newIsActive: Boolean) {
-
         val rule = getRuleById(ruleId)
         if (rule.isEndTimeSet && !rule.isRecurring && !rule.isActive) {
             if (isCurrentTimeBeforeThisTime(rule.endTime)) {
-            updateRuleField(ruleId) { it.copy(isActive = newIsActive)}
+                updateRuleField(ruleId) {
+                    it.copy(isActive = newIsActive).also { updatedRule ->
+                        // Update the rule in the repository
+                        ruleRepository.updateDisplayRuleIsActive(ruleId, newIsActive)
+                    }
+                }
             }
         } else {
-            updateRuleField(ruleId) { it.copy(isActive = newIsActive) }
+            updateRuleField(ruleId) {
+                it.copy(isActive = newIsActive).also { updatedRule ->
+                    // Update the rule in the repository
+                    ruleRepository.updateDisplayRuleIsActive(ruleId, newIsActive)
+                }
+            }
         }
     }
 
@@ -192,8 +197,6 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
-
-
     fun updateRuleStartTime(ruleId: Int, startTime: Date) {
         updateRuleField(ruleId) { it.copy(startTime = startTime) }
     }
@@ -208,15 +211,13 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun startPeriodicRuleCheck() {
-        //TODO Might Run in background forever
         periodicRuleCheckJob?.cancel()
         periodicRuleCheckJob = viewModelScope.launch {
             while (true) {
                 checkActiveRules()
                 loadRules()
                 loadApps()
-                delay(10000)
-            // Check every 10 seconds
+                delay(10000) // Check every 10 seconds
             }
         }
     }
@@ -232,5 +233,4 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
     fun stopPeriodicRuleCheck() {
         periodicRuleCheckJob?.cancel()
     }
-
 }

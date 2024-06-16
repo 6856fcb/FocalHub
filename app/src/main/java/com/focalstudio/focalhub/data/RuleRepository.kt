@@ -4,6 +4,7 @@ package com.focalstudio.focalhub.data
 import android.content.Context
 import com.focalstudio.focalhub.data.model.DisplayRule
 import com.focalstudio.focalhub.data.model.UsageRule
+import com.focalstudio.focalhub.utils.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -66,6 +67,7 @@ class RoomRuleRepository(private val context: Context) : RuleRepository {
         ioScope.launch {
             this@RoomRuleRepository.usageRuleDao.update(usageRule)
         }
+
     }
 
     override fun deleteUsageRule(usageRuleId: Int) {
@@ -111,9 +113,20 @@ class RoomRuleRepository(private val context: Context) : RuleRepository {
 
     override fun updateDisplayRuleIsActive(ruleId: Int, isActive: Boolean) {
         ioScope.launch {
-            val rule = this@RoomRuleRepository.displayRuleDao.getDisplayRuleById(ruleId)
-            rule.isActive = isActive
-            this@RoomRuleRepository.displayRuleDao.update(rule)
+            try {
+                // Retrieve by  ID
+                val rule = this@RoomRuleRepository.displayRuleDao.getDisplayRuleById(ruleId)
+
+                // Update status
+                rule.isActive = isActive
+
+                // Update rule in the database
+                this@RoomRuleRepository.displayRuleDao.update(rule)
+            } catch (e: Exception) {
+                // exceptions
+                e.printStackTrace()
+            }
         }
     }
+
 }

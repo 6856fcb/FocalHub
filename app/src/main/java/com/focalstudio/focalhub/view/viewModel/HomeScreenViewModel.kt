@@ -39,20 +39,21 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
 
     private val ruleRepository: RuleRepository = RuleRepositoryProvider.getInstance(application.applicationContext)
     private val _rules = MutableStateFlow<List<DisplayRule>>(emptyList())
-    private val rules: StateFlow<List<DisplayRule>> get() = _rules
+    val rules: StateFlow<List<DisplayRule>> get() = _rules
 
     private val _usageRules = MutableStateFlow<List<UsageRule>>(emptyList())
-    private val usageRules: StateFlow<List<UsageRule>> get() = _usageRules
+    val usageRules: StateFlow<List<UsageRule>> get() = _usageRules
 
     init {
         observeRuleChanges()
+        loadRules()
         loadApps()
     }
 
     private fun observeRuleChanges() {
         viewModelScope.launch {
             ruleRepository.setRuleChangeListener {
-                loadApps()
+                loadRules()
             }
         }
     }
@@ -61,15 +62,18 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
         viewModelScope.launch {
             _rules.value = ruleRepository.getDisplayRules()
             _usageRules.value = ruleRepository.getUsageRules()
+            updateRulesState()
         }
     }
 
     private fun updateRulesState() {
-        for (rule in rules.value) {
-            val isActive = shouldDisplayRuleBeCurrentlyActive(rule)
-            Log.d(rule.id.toString(), rule.name)
-            ruleRepository.updateDisplayRuleIsActive(rule.id, isActive)
-            rule.isActive = isActive
+        viewModelScope.launch {
+            val updatedRules = _rules.value.map { rule ->
+                val isActive = shouldDisplayRuleBeCurrentlyActive(rule)
+                ruleRepository.updateDisplayRuleIsActive(rule.id, isActive)
+                rule.copy(isActive = isActive)
+            }
+            _rules.value = updatedRules
         }
     }
 
@@ -89,11 +93,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
                             icon = resolveInfo.loadIcon(pm)
                         )
                     }
-
-                loadRules()
-                updateRulesState()
                 val filteredApps = applyDisplayRules(apps, rules.value)
-
                 _appsList.value = filteredApps
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -103,6 +103,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     fun onResume() {
+        loadRules()
         loadApps()
         // periodic rule check coroutine when ViewModel resumed
         startPeriodicRuleCheck()
@@ -113,6 +114,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
         // Cancel rule check coroutine when viewModel is paused
         periodicRuleCheckJob?.cancel()
     }
+
     private fun startPeriodicRuleCheck() {
         periodicRuleCheckJob = viewModelScope.launch {
             while (true) {
@@ -132,7 +134,6 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     private suspend fun tryAppLaunchAndApplyUsageRules(app: App, context: Context) {
-        loadRules()
         if (usageRules.value.isNotEmpty()) {
             var appFoundInARule = false
 
