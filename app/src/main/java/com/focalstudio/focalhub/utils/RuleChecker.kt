@@ -31,15 +31,15 @@ fun getFilteredApps (
 
     // Apply display priorities in order
     if (blacklistedApps.isNotEmpty()) {
-        log("blacklist not empty")
+
         for (app in allApps) {
             if (blacklistedApps.contains(app.packageName)) {
-                log(app.name, "in blacklist")
+
                 // 1.) Always Block blacklisted apps -> Don't show
                 continue
 
             } else if (whitelistedApps.contains(app.packageName)) {
-                log("cc2")
+
                 // 2.) If not blacklisted check if app is whitelisted -> Show App
                 filteredApps.add(app)
 
@@ -47,15 +47,15 @@ fun getFilteredApps (
 
             // 3.) No whitelisted items found and app not blocked -> Show App
             {
-                log("cc3")
+
                 filteredApps.add(app)}
         }
     } else {
-        log("no blacklist")
+
         // No blacklisted apps, allow only whitelisted apps
         for (app in allApps) {
             if (whitelistedApps.contains(app.packageName)) {
-                log("cc^1")
+
                 // Allow whitelisted apps
                 filteredApps.add(app)
             }
@@ -64,11 +64,9 @@ fun getFilteredApps (
     return filteredApps
 }
 fun applyDisplayRules(apps: List<App>, displayRules: List<DisplayRule>): List<App> {
-    log("ALPHA POINT")
+
     if (displayRules.isEmpty()) {
-        log(
-        "CHECKPOINT ZULU"
-        )
+
         return apps} // Default Rule applies
 
     val filteredApps = getFilteredApps(apps, displayRules)

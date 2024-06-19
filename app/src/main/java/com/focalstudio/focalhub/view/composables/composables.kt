@@ -105,7 +105,7 @@ fun AppSelectionDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(onClick = { onConfirm(selectedApps)
-                    log(selectedApps.size, "OnConfirmCheckpoint")}) {
+                    }) {
                         Text("Confirm")
                     }
                 }

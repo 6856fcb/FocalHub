@@ -143,7 +143,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
             var appFoundInARule = false
 
             for (usageRule in usageRules.value) {
-                log(usageRule.appList)
+
 
                 if (usageRule.appList.contains(app.packageName)) {
                     appFoundInARule = true
@@ -162,7 +162,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
             }
             if (!appFoundInARule) {
                 launchApp(context, app)
-                log(getAppUsageTimeInSeconds(context, app.packageName))
+
             }
         } else {
             launchApp(context, app)
