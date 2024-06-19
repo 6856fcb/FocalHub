@@ -1,0 +1,53 @@
+Index: app/src/main/java/com/focalstudio/focalhub/view/viewModel/LauncherViewModel.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.focalstudio.focalhub.view.viewModel\r\n\r\nimport android.app.Application\r\nimport android.content.pm.PackageManager\r\nimport androidx.lifecycle.AndroidViewModel\r\nimport com.focalstudio.focalhub.data.model.App\r\nimport kotlinx.coroutines.flow.MutableStateFlow\r\nimport kotlinx.coroutines.flow.StateFlow\r\nimport kotlinx.coroutines.flow.asStateFlow\r\nimport kotlinx.coroutines.flow.update\r\nimport kotlinx.coroutines.launch\r\nimport androidx.lifecycle.viewModelScope\r\n\r\nclass LauncherViewModel(application: Application) : AndroidViewModel(application) {\r\n\r\n    private val _appsList = MutableStateFlow<List<App>>(emptyList())\r\n    val appsList: StateFlow<List<App>> get() = _appsList.asStateFlow()\r\n\r\n    init {\r\n        loadApps()\r\n    }\r\n\r\n    private fun loadApps() {\r\n        viewModelScope.launch {\r\n            val pm: PackageManager = getApplication<Application>().packageManager\r\n            val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)\r\n                .map { appInfo ->\r\n                    App(\r\n                        name = appInfo.loadLabel(pm).toString(),\r\n                        packageName = appInfo.packageName,\r\n                        icon = appInfo.loadIcon(pm)\r\n                    )\r\n                }\r\n            _appsList.update { apps }\r\n        }\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/focalstudio/focalhub/view/viewModel/LauncherViewModel.kt b/app/src/main/java/com/focalstudio/focalhub/view/viewModel/LauncherViewModel.kt
+--- a/app/src/main/java/com/focalstudio/focalhub/view/viewModel/LauncherViewModel.kt	
++++ b/app/src/main/java/com/focalstudio/focalhub/view/viewModel/LauncherViewModel.kt	
+@@ -27,6 +27,7 @@
+                 .map { appInfo ->
+                     App(
+                         name = appInfo.loadLabel(pm).toString(),
++                        //name = "test",
+                         packageName = appInfo.packageName,
+                         icon = appInfo.loadIcon(pm)
+                     )
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n    xmlns:tools=\"http://schemas.android.com/tools\">\r\n\r\n    <uses-permission\r\n        android:name=\"android.permission.QUERY_ALL_PACKAGES\"\r\n        tools:ignore=\"QueryAllPackagesPermission\" />\r\n    <uses-permission android:name=\"android.permission.REQUEST_DELETE_PACKAGES\" />\r\n    <uses-permission android:name=\"android.permission.EXPAND_STATUS_BAR\" />\r\n\r\n\r\n    <application\r\n        android:allowBackup=\"true\"\r\n        android:dataExtractionRules=\"@xml/data_extraction_rules\"\r\n        android:fullBackupContent=\"@xml/backup_rules\"\r\n        android:icon=\"@mipmap/ic_launcher\"\r\n        android:label=\"@string/app_name\"\r\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\r\n        android:supportsRtl=\"true\"\r\n        android:theme=\"@style/Theme.Focalhub\"\r\n        tools:targetApi=\"31\">\r\n        <activity\r\n            android:name=\".view.activities.MainActivity\"\r\n            android:exported=\"true\">\r\n            <intent-filter>\r\n\r\n                <action android:name=\"android.intent.action.MAIN\" />\r\n                <category android:name=\"android.intent.category.LAUNCHER\"/>\r\n                <category android:name=\"android.intent.category.HOME\" />\r\n                <category android:name=\"android.intent.category.DEFAULT\" />\r\n            </intent-filter>\r\n        </activity>\r\n    </application>\r\n\r\n</manifest>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	
++++ b/app/src/main/AndroidManifest.xml	
+@@ -7,6 +7,7 @@
+         tools:ignore="QueryAllPackagesPermission" />
+     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
++    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+ 
+ 
+     <application
+Index: app/src/main/java/com/focalstudio/focalhub/view/viewModel/AppGrid.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.focalstudio.focalhub.view.composables\r\n\r\nimport android.graphics.drawable.Drawable\r\nimport androidx.compose.foundation.Image\r\nimport androidx.compose.foundation.layout.*\r\nimport androidx.compose.foundation.lazy.grid.GridCells\r\nimport androidx.compose.foundation.lazy.grid.LazyVerticalGrid\r\nimport androidx.compose.foundation.lazy.grid.items\r\nimport androidx.compose.material3.Text\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.compose.ui.Modifier\r\nimport androidx.compose.ui.draw.paint\r\nimport androidx.compose.ui.graphics.painter.Painter\r\nimport coil.compose.rememberImagePainter\r\nimport coil.compose.rememberAsyncImagePainter\r\nimport androidx.compose.ui.unit.dp\r\nimport com.focalstudio.focalhub.data.model.App\r\nimport com.google.accompanist.drawablepainter.rememberDrawablePainter\r\n\r\n@Composable\r\nfun AppGrid(apps: List<App>) {\r\n    LazyVerticalGrid(\r\n        columns = GridCells.Fixed(4),\r\n        modifier = Modifier.padding(16.dp)\r\n    ) {\r\n        items(apps) { app ->\r\n            AppItem(app)\r\n        }\r\n    }\r\n}\r\n\r\n@Composable\r\nfun AppItem(app: App) {\r\n    Column(\r\n        modifier = Modifier\r\n            .padding(8.dp)\r\n            .width(64.dp),\r\n        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally\r\n    ) {\r\n        val painter: Painter = rememberDrawablePainter(drawable = app.icon)\r\n        Image(\r\n            painter = painter,\r\n            contentDescription = app.name,\r\n            modifier = Modifier.size(64.dp)\r\n        )\r\n        Text(\r\n            text = app.name,\r\n            modifier = Modifier.padding(top = 4.dp)\r\n        )\r\n    }\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/focalstudio/focalhub/view/viewModel/AppGrid.kt b/app/src/main/java/com/focalstudio/focalhub/view/viewModel/AppGrid.kt
+--- a/app/src/main/java/com/focalstudio/focalhub/view/viewModel/AppGrid.kt	
++++ b/app/src/main/java/com/focalstudio/focalhub/view/viewModel/AppGrid.kt	
+@@ -21,7 +21,7 @@
+ fun AppGrid(apps: List<App>) {
+     LazyVerticalGrid(
+         columns = GridCells.Fixed(4),
+-        modifier = Modifier.padding(16.dp)
++        modifier = Modifier.padding(18.dp)
+     ) {
+         items(apps) { app ->
+             AppItem(app)

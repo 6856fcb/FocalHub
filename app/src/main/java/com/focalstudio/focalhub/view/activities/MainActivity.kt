@@ -1,12 +1,28 @@
 package com.focalstudio.focalhub.view.activities
 
-import androidx.appcompat.app.AppCompatActivity
+import android.os.Build
 import android.os.Bundle
-import com.focalstudio.focalhub.R
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+import com.focalstudio.focalhub.navigation.Navigation
+import com.focalstudio.focalhub.utils.FocalHubTheme
+import androidx.lifecycle.lifecycleScope
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
+
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContent {
+            FocalHubTheme {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    Navigation(lifecycleOwner = this@MainActivity)
+                }
+            }
+        }
     }
 }

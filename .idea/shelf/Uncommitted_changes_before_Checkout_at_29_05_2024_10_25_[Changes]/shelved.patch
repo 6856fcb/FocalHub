@@ -1,0 +1,251 @@
+Index: app/src/main/java/com/focalstudio/focalhub/view/viewModel/HomeScreenViewModel.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.focalstudio.focalhub.view.viewModel\r\n\r\nimport android.app.Application\r\nimport android.content.Context\r\nimport android.content.Intent\r\nimport android.content.pm.PackageManager\r\nimport android.os.Build\r\nimport android.os.VibrationEffect\r\nimport android.os.Vibrator\r\nimport androidx.annotation.RequiresApi\r\nimport androidx.lifecycle.AndroidViewModel\r\nimport androidx.lifecycle.viewModelScope\r\nimport com.focalstudio.focalhub.data.model.App\r\nimport com.focalstudio.focalhub.data.DisplayRuleRepository\r\nimport com.focalstudio.focalhub.data.DisplayRuleRepositoryProvider\r\nimport kotlinx.coroutines.flow.MutableStateFlow\r\nimport kotlinx.coroutines.flow.StateFlow\r\nimport kotlinx.coroutines.flow.asStateFlow\r\nimport kotlinx.coroutines.flow.update\r\nimport kotlinx.coroutines.launch\r\nimport java.util.*\r\n\r\nclass HomeScreenViewModel(application: Application) : AndroidViewModel(application) {\r\n\r\n    private val _appsList = MutableStateFlow<List<App>>(emptyList())\r\n    val appsList: StateFlow<List<App>> get() = _appsList.asStateFlow()\r\n\r\n    private val _isVibrationEnabled = MutableStateFlow(true)\r\n    val isVibrationEnabled: StateFlow<Boolean> get() = _isVibrationEnabled.asStateFlow()\r\n\r\n    private val ruleRepository: DisplayRuleRepository = DisplayRuleRepositoryProvider.getInstance(application.applicationContext)\r\n\r\n    init {\r\n        loadApps()\r\n    }\r\n\r\n    private fun loadApps() {\r\n        viewModelScope.launch {\r\n            try {\r\n                val pm: PackageManager = getApplication<Application>().packageManager\r\n                val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {\r\n                    addCategory(Intent.CATEGORY_LAUNCHER)\r\n                }\r\n                val apps = pm.queryIntentActivities(mainIntent, 0)\r\n                    .map { resolveInfo ->\r\n                        App(\r\n                            name = resolveInfo.loadLabel(pm).toString(),\r\n                            packageName = resolveInfo.activityInfo.packageName,\r\n                            icon = resolveInfo.loadIcon(pm)\r\n                        )\r\n                    }\r\n                val filteredApps = applyDisplayRules(apps)\r\n\r\n                _appsList.update {\r\n                    filteredApps\r\n                }\r\n            } catch (e: Exception) {\r\n                e.printStackTrace()\r\n            }\r\n        }\r\n    }\r\n\r\n    private suspend fun applyDisplayRules(apps: List<App>): List<App> {\r\n        val displayRules = ruleRepository.getRules()\r\n        val currentTime = Calendar.getInstance().time\r\n        val filteredApps = mutableListOf<App>()\r\n\r\n        for (app in apps) {\r\n            var isAllowed = true\r\n            for (rule in displayRules) {\r\n                if (!rule.isActive) {\r\n                    continue\r\n                }\r\n\r\n                if ((rule.isBlacklist && rule.appList.contains(app.packageName)) || (!rule.isBlacklist && !rule.appList.contains(app.packageName))) {\r\n                    isAllowed = false\r\n                    break\r\n                }\r\n                //TODO More rule checking logic\r\n            }\r\n\r\n            if (isAllowed) {\r\n                filteredApps.add(app)\r\n            }\r\n        }\r\n        return filteredApps\r\n    }\r\n\r\n\r\n    private fun isTimeWithinWindow(currentTime: Date, startTime: Date, endTime: Date): Boolean {\r\n        return currentTime.after(startTime) && currentTime.before(endTime)\r\n    }\r\n\r\n    private fun isDayMatch(currentTime: Date, weekdays: List<Int>): Boolean {\r\n        val calendar = Calendar.getInstance()\r\n        calendar.time = currentTime\r\n        val currentDay = calendar.get(Calendar.DAY_OF_WEEK)\r\n        return weekdays.contains(currentDay)\r\n    }\r\n\r\n\r\n\r\n    private fun isRecurring(currentTime: Date, startTime: Date, endTime: Date, weekdays: List<Int>): Boolean {\r\n        val calendar = Calendar.getInstance()\r\n        calendar.time = currentTime\r\n        val currentDay = calendar.get(Calendar.DAY_OF_WEEK)\r\n        return weekdays.contains(currentDay) && isTimeWithinWindow(currentTime, startTime, endTime)\r\n    }\r\n\r\n    @RequiresApi(Build.VERSION_CODES.O)\r\n    fun AppIconClicked(app: App, context: Context) {\r\n        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator\r\n        val vibrationEffect = VibrationEffect.createOneShot(10, VibrationEffect.DEFAULT_AMPLITUDE)\r\n        vibrator.vibrate(vibrationEffect)\r\n\r\n        val launchIntent = context.packageManager.getLaunchIntentForPackage(app.packageName)\r\n        launchIntent?.let { context.startActivity(it) }\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/focalstudio/focalhub/view/viewModel/HomeScreenViewModel.kt b/app/src/main/java/com/focalstudio/focalhub/view/viewModel/HomeScreenViewModel.kt
+--- a/app/src/main/java/com/focalstudio/focalhub/view/viewModel/HomeScreenViewModel.kt	
++++ b/app/src/main/java/com/focalstudio/focalhub/view/viewModel/HomeScreenViewModel.kt	
+@@ -7,7 +7,9 @@
+ import android.os.Build
+ import android.os.VibrationEffect
+ import android.os.Vibrator
++import androidx.activity.ComponentActivity
+ import androidx.annotation.RequiresApi
++import androidx.compose.runtime.Composable
+ import androidx.lifecycle.AndroidViewModel
+ import androidx.lifecycle.viewModelScope
+ import com.focalstudio.focalhub.data.model.App
+@@ -30,6 +32,12 @@
+ 
+     private val ruleRepository: DisplayRuleRepository = DisplayRuleRepositoryProvider.getInstance(application.applicationContext)
+ 
++    private val appUsageTime = mutableMapOf<String, Long>()
++    private val appTimeLimits = mutableMapOf<String, Long>()
++
++    private val _timeLimitReached = MutableStateFlow<String?>(null)
++    val timeLimitReached: StateFlow<String?> get() = _timeLimitReached.asStateFlow()
++
+     init {
+         loadApps()
+     }
+@@ -73,7 +81,7 @@
+                 }
+ 
+                 if ((rule.isBlacklist && rule.appList.contains(app.packageName)) || (!rule.isBlacklist && !rule.appList.contains(app.packageName))) {
+-                    isAllowed = false
++                    isAllowed = true
+                     break
+                 }
+                 //TODO More rule checking logic
+@@ -86,34 +94,58 @@
+         return filteredApps
+     }
+ 
+-
+-    private fun isTimeWithinWindow(currentTime: Date, startTime: Date, endTime: Date): Boolean {
+-        return currentTime.after(startTime) && currentTime.before(endTime)
++    fun setAppTimeLimit(packageName: String, minutes: Int) {
++        appTimeLimits[packageName] = minutes * 60 * 1000L
+     }
+ 
+-    private fun isDayMatch(currentTime: Date, weekdays: List<Int>): Boolean {
+-        val calendar = Calendar.getInstance()
+-        calendar.time = currentTime
+-        val currentDay = calendar.get(Calendar.DAY_OF_WEEK)
+-        return weekdays.contains(currentDay)
++    fun trackAppUsage(packageName: String) {
++        val currentTime = System.currentTimeMillis()
++        val lastUsageTime = appUsageTime[packageName] ?: currentTime
++        val elapsedTime = currentTime - lastUsageTime
++        appUsageTime[packageName] = currentTime
++
++        val timeLimit = appTimeLimits[packageName]
++        if (timeLimit != null && elapsedTime >= timeLimit) {
++            appUsageTime[packageName] = 0
++            _timeLimitReached.value = packageName
++        }
+     }
+ 
++
++    fun clearTimeLimitReached() {
++        _timeLimitReached.value = null
++    }
+ 
+ 
+-    private fun isRecurring(currentTime: Date, startTime: Date, endTime: Date, weekdays: List<Int>): Boolean {
+-        val calendar = Calendar.getInstance()
+-        calendar.time = currentTime
+-        val currentDay = calendar.get(Calendar.DAY_OF_WEEK)
+-        return weekdays.contains(currentDay) && isTimeWithinWindow(currentTime, startTime, endTime)
++    @Composable
++    fun TimeLimitReachedScreen(packageName: String, onDismiss: () -> Unit) {
++//TODO Implement TimeLimitReachedScreen
+     }
+ 
+-    @RequiresApi(Build.VERSION_CODES.O)
++
++
++
+     fun AppIconClicked(app: App, context: Context) {
+-        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+-        val vibrationEffect = VibrationEffect.createOneShot(10, VibrationEffect.DEFAULT_AMPLITUDE)
+-        vibrator.vibrate(vibrationEffect)
++        // Same logic as before for vibration
++        // Check if the app has a time limit set
++        val timeLimit = appTimeLimits[app.packageName]
++        if (timeLimit != null) {
++            // Check if the time limit has been reached
++            val currentTime = System.currentTimeMillis()
++            val lastUsageTime = appUsageTime[app.packageName] ?: currentTime
++            val elapsedTime = currentTime - lastUsageTime
++            if (elapsedTime >= timeLimit) {
++                // Time limit reached, do not launch the app
++                _timeLimitReached.value = app.packageName
++                return
++            }
++        }
+ 
++        // Launch the app
+         val launchIntent = context.packageManager.getLaunchIntentForPackage(app.packageName)
+-        launchIntent?.let { context.startActivity(it) }
++        launchIntent?.let {
++            context.startActivity(it)
++            trackAppUsage(app.packageName)
++        }
+     }
+ }
+Index: app/src/main/java/com/focalstudio/focalhub/view/activities/HomeScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.focalstudio.focalhub.view.activities\r\n\r\nimport android.content.Context\r\nimport android.os.Build\r\nimport androidx.annotation.RequiresApi\r\nimport androidx.compose.foundation.Image\r\nimport androidx.compose.foundation.background\r\nimport androidx.compose.foundation.clickable\r\nimport androidx.compose.foundation.layout.*\r\nimport androidx.compose.foundation.lazy.grid.GridCells\r\nimport androidx.compose.foundation.lazy.grid.LazyVerticalGrid\r\nimport androidx.compose.foundation.lazy.grid.items\r\nimport androidx.compose.material.icons.Icons\r\nimport androidx.compose.material.icons.filled.Settings\r\nimport androidx.compose.material3.ExperimentalMaterial3Api\r\nimport androidx.compose.material3.Icon\r\nimport androidx.compose.material3.IconButton\r\nimport androidx.compose.material3.Scaffold\r\nimport androidx.compose.material3.Text\r\nimport androidx.compose.material3.TopAppBar\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.compose.ui.Modifier\r\nimport androidx.compose.ui.graphics.Color\r\nimport androidx.compose.ui.graphics.painter.Painter\r\nimport androidx.compose.ui.unit.dp\r\nimport androidx.compose.ui.unit.sp\r\nimport androidx.navigation.NavController\r\nimport com.focalstudio.focalhub.data.model.App\r\nimport com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel\r\nimport com.google.accompanist.drawablepainter.rememberDrawablePainter\r\n\r\n@RequiresApi(Build.VERSION_CODES.O)\r\n@OptIn(ExperimentalMaterial3Api::class)\r\n@Composable\r\nfun HomeScreen(navController: NavController, apps: List<App>, context: Context, viewModel: HomeScreenViewModel) {\r\n    Scaffold(\r\n        topBar = {\r\n            TopAppBar(\r\n                title = { Text(\"Home\") },\r\n                actions = {\r\n                    IconButton(onClick = { navController.navigate(\"settingsScreen\") }) {\r\n                        Icon(Icons.Default.Settings, contentDescription = \"Settings\")\r\n                    }\r\n                }\r\n            )\r\n        }\r\n    ) { paddingValues ->\r\n        Column(modifier = Modifier.padding(paddingValues)) {\r\n            Text(\r\n                text = \"Apps\",\r\n                fontSize = 20.sp,\r\n                modifier = Modifier.padding(16.dp)\r\n            )\r\n            AppGrid(apps, context, viewModel)\r\n        }\r\n    }\r\n}\r\n\r\n@RequiresApi(Build.VERSION_CODES.O)\r\n@Composable\r\nfun AppGrid(\r\n    apps: List<App>,\r\n    context: Context,\r\n    viewModel: HomeScreenViewModel\r\n) {\r\n    LazyVerticalGrid(\r\n        columns = GridCells.Fixed(4),\r\n        modifier = Modifier.padding(16.dp)\r\n    ) {\r\n        items(apps) { app ->\r\n            AppItem(app, context, viewModel)\r\n        }\r\n    }\r\n}\r\n\r\n@RequiresApi(Build.VERSION_CODES.O)\r\n@Composable\r\nfun AppItem(app: App, context: Context, viewModel: HomeScreenViewModel) {\r\n    Column(\r\n        modifier = Modifier\r\n            .padding(8.dp)\r\n            .width(64.dp)\r\n            .clickable(\r\n                onClick = {\r\n                    viewModel.AppIconClicked(app, context)\r\n                }\r\n            ),\r\n        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally\r\n    ) {\r\n        val painter: Painter = rememberDrawablePainter(drawable = app.icon)\r\n        Image(\r\n            painter = painter,\r\n            contentDescription = app.name,\r\n            modifier = Modifier\r\n                .size(54.dp)\r\n                .background(color = Color.White, shape = androidx.compose.foundation.shape.CircleShape) // For ripple effect\r\n                .padding(0.dp)\r\n        )\r\n        Text(\r\n            text = app.name,\r\n            fontSize = 12.sp,\r\n            modifier = Modifier.padding(top = 4.dp)\r\n        )\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/focalstudio/focalhub/view/activities/HomeScreen.kt b/app/src/main/java/com/focalstudio/focalhub/view/activities/HomeScreen.kt
+--- a/app/src/main/java/com/focalstudio/focalhub/view/activities/HomeScreen.kt	
++++ b/app/src/main/java/com/focalstudio/focalhub/view/activities/HomeScreen.kt	
+@@ -28,11 +28,29 @@
+ import com.focalstudio.focalhub.data.model.App
+ import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
+ import com.google.accompanist.drawablepainter.rememberDrawablePainter
++import androidx.compose.foundation.layout.Column
++import androidx.compose.foundation.shape.CircleShape
++import androidx.compose.foundation.text.KeyboardOptions
++import androidx.compose.material3.AlertDialog
++import androidx.compose.material3.Button
++import androidx.compose.material3.Text
++import androidx.compose.material3.TextField
++import androidx.compose.runtime.collectAsState
++import androidx.compose.runtime.getValue
++import androidx.compose.runtime.mutableStateOf
++import androidx.compose.runtime.remember
++import androidx.compose.runtime.setValue
++import androidx.compose.ui.Alignment
++import androidx.compose.ui.text.input.KeyboardType
+ 
+ @RequiresApi(Build.VERSION_CODES.O)
+ @OptIn(ExperimentalMaterial3Api::class)
+ @Composable
+ fun HomeScreen(navController: NavController, apps: List<App>, context: Context, viewModel: HomeScreenViewModel) {
++    val showDialog = remember { mutableStateOf(false) }
++    val selectedApp = remember { mutableStateOf<App?>(null) }
++    val timeLimitReached by viewModel.timeLimitReached.collectAsState()
++
+     Scaffold(
+         topBar = {
+             TopAppBar(
+@@ -51,9 +69,31 @@
+                 fontSize = 20.sp,
+                 modifier = Modifier.padding(16.dp)
+             )
+-            AppGrid(apps, context, viewModel)
++            AppGrid(apps, context, viewModel, onAppClick = { app ->
++                selectedApp.value = app
++                showDialog.value = true
++            })
++        }
++    }
++
++    if (showDialog.value) {
++        selectedApp.value?.let { app ->
++            TimeLimitDialog(
++                app = app,
++                onDismiss = { showDialog.value = false },
++                onTimeSet = { minutes ->
++                    viewModel.setAppTimeLimit(app.packageName, minutes)
++                    showDialog.value = false
++                }
++            )
+         }
+     }
++
++    timeLimitReached?.let { packageName ->
++        //TimeLimitReachedScreen(packageName) {
++          //  viewModel.clearTimeLimitReached()
++        //}
++    }
+ }
+ 
+ @RequiresApi(Build.VERSION_CODES.O)
+@@ -61,31 +101,37 @@
+ fun AppGrid(
+     apps: List<App>,
+     context: Context,
+-    viewModel: HomeScreenViewModel
++    viewModel: HomeScreenViewModel,
++    onAppClick: (App) -> Unit
+ ) {
+     LazyVerticalGrid(
+         columns = GridCells.Fixed(4),
+         modifier = Modifier.padding(16.dp)
+     ) {
+         items(apps) { app ->
+-            AppItem(app, context, viewModel)
++            AppItem(app, context, viewModel, onAppClick)
+         }
+     }
+ }
+ 
+ @RequiresApi(Build.VERSION_CODES.O)
+ @Composable
+-fun AppItem(app: App, context: Context, viewModel: HomeScreenViewModel) {
++fun AppItem(
++    app: App,
++    context: Context,
++    viewModel: HomeScreenViewModel,
++    onAppClick: (App) -> Unit
++) {
+     Column(
+         modifier = Modifier
+             .padding(8.dp)
+             .width(64.dp)
+             .clickable(
+                 onClick = {
+-                    viewModel.AppIconClicked(app, context)
++                    onAppClick(app)
+                 }
+             ),
+-        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
++        horizontalAlignment = Alignment.CenterHorizontally
+     ) {
+         val painter: Painter = rememberDrawablePainter(drawable = app.icon)
+         Image(
+@@ -93,7 +139,7 @@
+             contentDescription = app.name,
+             modifier = Modifier
+                 .size(54.dp)
+-                .background(color = Color.White, shape = androidx.compose.foundation.shape.CircleShape) // For ripple effect
++                .background(color = Color.White, shape = CircleShape) // For ripple effect
+                 .padding(0.dp)
+         )
+         Text(
+@@ -102,4 +148,4 @@
+             modifier = Modifier.padding(top = 4.dp)
+         )
+     }
+-}
++}
+\ No newline at end of file
