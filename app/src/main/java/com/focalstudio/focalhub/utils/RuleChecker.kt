@@ -1,6 +1,5 @@
 package com.focalstudio.focalhub.utils
 
-import android.util.Log
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.model.DisplayRule
 import com.focalstudio.focalhub.data.model.UsageRule
@@ -95,7 +94,10 @@ fun shouldNonLinkedUsageRuleBeCurrentlyActive (rule: UsageRule): Boolean {
 
     return if (rule.isRecurring && !rule.isManuallyDisabled) {
 
-        isCurrentTimeAndDayInThisWindow(rule.timeWindowStartTime, rule.timeWindowEndTime, rule.weekdays)
+        isCurrentTimeAndDayInThisWindow(
+            timeStart = rule.timeWindowStartTime,
+            timeEnd = rule.timeWindowEndTime,
+            weekdays = rule.weekdays)
 
     } else if (rule.isRestrictedUntilEndTime && rule.isCurrentlyActive && !rule.isRecurring) {
 
