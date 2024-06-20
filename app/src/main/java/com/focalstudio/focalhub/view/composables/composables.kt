@@ -40,7 +40,6 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewModelScope
-import com.focalstudio.focalhub.utils.log
 import com.focalstudio.focalhub.view.viewModel.AppUsageViewModel
 import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
 import kotlinx.coroutines.launch
@@ -142,8 +141,16 @@ fun AppUsageSelectionDialog(
     onDismissRequest: () -> Unit,
     onConfirm: (List<String>) -> Unit
 ) {
-    val allApps by remember { viewModel.appsList }
     val rule = viewModel.getUsageRuleById(ruleId)
+    var allApps by remember { mutableStateOf(emptyList<App>()) }
+
+    LaunchedEffect(rule) {
+        rule?.let {
+            val apps = viewModel.getAppsThatAreNotInOtherUsageRules(it)
+            allApps = apps
+        }
+    }
+
     val initialSelectedApps = rule?.appList ?: emptyList()
 
     AppSelectionDialog(

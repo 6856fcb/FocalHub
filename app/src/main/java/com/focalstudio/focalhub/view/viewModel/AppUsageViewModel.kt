@@ -248,5 +248,38 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
         return app?.name ?: "Rule for App"
     }
 
+    private suspend fun isAppInAnyUsageRule(app : App) : Boolean {
+
+        val allUsageRules = ruleRepository.getUsageRules()
+
+        var appFoundInARule = false
+        if (allUsageRules.isNotEmpty()) {
+            for (usageRule in allUsageRules) {
+                if (usageRule.appList.contains(app.packageName)) {
+                    appFoundInARule = true
+                }
+            }
+        }
+        return appFoundInARule
+    }
+
+    suspend fun getAppsThatAreNotInOtherUsageRules(usageRule: UsageRule) : List<App> {
+        val appList = mutableListOf<App>()
+        for (app in appsList.value) {
+            log(app.packageName)
+            if (usageRule.appList.contains(app.packageName)) {
+                log("plus type 1")
+                appList.add(app)
+            } else if (!isAppInAnyUsageRule(app)) {
+                log("plus type 2")
+                appList.add(app)
+            } else {
+                log("not, type 3")
+            }
+        }
+        log(appList.size)
+        return appList
+    }
+
 
 }
