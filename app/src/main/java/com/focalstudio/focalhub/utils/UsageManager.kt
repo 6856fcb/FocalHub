@@ -1,11 +1,7 @@
 package com.focalstudio.focalhub.utils
 
-import android.app.AppOpsManager
 import android.app.usage.UsageStatsManager
 import android.content.Context
-import android.os.Build
-import android.os.Process
-import androidx.annotation.RequiresApi
 import com.focalstudio.focalhub.data.model.UsageRule
 
 fun getAppUsageTimeInSeconds(context: Context, packageName: String, startTime: Long? = null, endTime: Long? = null): Int {
@@ -28,24 +24,26 @@ fun getAppUsageTimeInSeconds(context: Context, packageName: String, startTime: L
 }
 
 fun isAppUsagePermittedByUsageRule(usageRule: UsageRule, context: Context) : Boolean {
-
     var usageTimeSumInSeconds = 0
     for (packageName in usageRule.appList) {
         usageTimeSumInSeconds += getAppUsageTimeInSeconds(context, packageName)
     }
 
+    if(!isUsageStatsPermissionGranted(context)) {
+        log("No usage stats permission granted", " Permission ERROR")
+        return true
+    }
     // Add more checks...
-
-    return (usageRule.maxUsageDurationInSeconds <= usageTimeSumInSeconds) && usageRule.restrictUsageTimePerApp
+    return (usageRule.maxUsageDurationInSeconds >= usageTimeSumInSeconds) || !usageRule.restrictUsageTimePerApp
 }
 
-@RequiresApi(Build.VERSION_CODES.Q)
 fun isUsageStatsPermissionGranted(context: Context): Boolean {
-    val appOpsManager = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-    val mode = appOpsManager.unsafeCheckOpNoThrow( // Better ways to check for high level permissions?
-        AppOpsManager.OPSTR_GET_USAGE_STATS,
-        Process.myUid(),
-        context.packageName
+    val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+    val currentTime = System.currentTimeMillis()
+    val stats = usageStatsManager.queryUsageStats(
+        UsageStatsManager.INTERVAL_DAILY,
+        currentTime - 1000 * 60 * 60,
+        currentTime
     )
-    return mode == AppOpsManager.MODE_ALLOWED
+    return stats.isNotEmpty()
 }
