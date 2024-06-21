@@ -97,7 +97,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
                         )
                     }
                 val filteredApps = applyDisplayRules(apps, rules.value)
-                _appsList.value = filteredApps
+                _appsList.value = filteredApps.filter { it.packageName != "com.focalstudio.focalhub" }
                 _allAppsList.value = apps
             } catch (e: Exception) {
                 e.printStackTrace()

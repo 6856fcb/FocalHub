@@ -61,7 +61,7 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
                         )
                     }
 
-                _appsList.value = apps
+                _appsList.value = apps.filter { it.packageName != "com.focalstudio.focalhub" }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
