@@ -22,7 +22,7 @@ class AppUsageMonitoringService : Service() {
         coroutineScope.launch {
             while (true) {
                 monitorAppUsage()
-                delay(10000) // Check every 10 seconds (Maybe set in settings later on)
+                delay(5000) // Check every 5 seconds (Maybe set in settings later on)
             }
         }
         return START_STICKY

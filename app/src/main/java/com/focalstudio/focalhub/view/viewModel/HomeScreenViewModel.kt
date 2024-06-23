@@ -123,13 +123,13 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
         periodicRuleCheckJob = viewModelScope.launch {
             while (true) {
                 loadApps()
-                delay(60000) // Check every 60 seconds
+                delay(6000) // Check every 6 seconds
             }
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun appIconClicked(app: App, context: Context) {
+    fun appIconClicked(app: App, context: Context) {
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         val vibrationEffect = VibrationEffect.createOneShot(10, VibrationEffect.DEFAULT_AMPLITUDE)
         vibrator.vibrate(vibrationEffect)
@@ -137,7 +137,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
         tryAppLaunchAndApplyUsageRules(app, context)
     }
 
-    private suspend fun tryAppLaunchAndApplyUsageRules(app: App, context: Context) {
+    private fun tryAppLaunchAndApplyUsageRules(app: App, context: Context) {
         if (usageRules.value.isNotEmpty()) {
             var appFoundInARule = false
 
