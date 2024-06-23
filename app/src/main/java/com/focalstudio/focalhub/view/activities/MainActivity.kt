@@ -1,3 +1,5 @@
+package com.focalstudio.focalhub.view.activities
+
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
