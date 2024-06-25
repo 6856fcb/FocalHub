@@ -1,4 +1,4 @@
-package com.focalstudio.focalhub.utils.UiTheme
+package com.focalstudio.focalhub.ui
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

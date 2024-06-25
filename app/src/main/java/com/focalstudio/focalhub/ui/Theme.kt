@@ -1,4 +1,4 @@
-package com.focalstudio.focalhub.utils.UiTheme
+package com.focalstudio.focalhub.ui
 
 import android.app.Activity
 import android.os.Build
@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import com.focalstudio.focalhub.view.activities.MainActivity
 
 private val DarkColorScheme = darkColorScheme(
     primary = Indigo500,
@@ -30,7 +29,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun MainActivity  (
+fun FocalHubTheme  (
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,

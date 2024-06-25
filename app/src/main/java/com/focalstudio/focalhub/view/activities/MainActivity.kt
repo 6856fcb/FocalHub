@@ -12,8 +12,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
 import com.focalstudio.focalhub.navigation.Navigation
+import com.focalstudio.focalhub.ui.FocalHubTheme
 import com.focalstudio.focalhub.utils.AppUsageMonitoringService
-import com.focalstudio.focalhub.utils.FocalHubTheme
 import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
 
 class MainActivity : ComponentActivity() {

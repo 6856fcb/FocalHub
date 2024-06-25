@@ -7,6 +7,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -123,7 +124,9 @@ fun AppItem(app: App, context: Context, viewModel: HomeScreenViewModel) {
             contentDescription = app.name,
             modifier = Modifier
                 .size(46.dp)
-                .background(color = Color.White, shape = androidx.compose.foundation.shape.CircleShape) // For ripple effect
+                .background(
+                    color = Color.Transparent,
+                    shape = androidx.compose.foundation.shape.CircleShape) // For ripple effect
                 .padding(0.dp)
         )
         Text(
