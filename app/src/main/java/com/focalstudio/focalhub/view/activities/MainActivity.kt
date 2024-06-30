@@ -11,7 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
-import com.focalstudio.focalhub.navigation.Navigation
+import cafe.adriel.voyager.core.annotation.InternalVoyagerApi
+import cafe.adriel.voyager.navigator.Navigator
 import com.focalstudio.focalhub.ui.FocalHubTheme
 import com.focalstudio.focalhub.utils.AppUsageMonitoringService
 import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
@@ -21,6 +22,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var viewModel: HomeScreenViewModel
     private val TAG = "MainActivityLifecycle"
 
+    @OptIn(InternalVoyagerApi::class)
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,7 +32,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             FocalHubTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    Navigation(lifecycleOwner = this@MainActivity)
+                    //Navigation(lifecycleOwner = this@MainActivity)
+                    Navigator(HomeScreen(context = this, viewModel = viewModel, lifecycleOwner = this@MainActivity))
                 }
             }
         }

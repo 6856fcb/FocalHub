@@ -17,48 +17,56 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
 import com.alorma.compose.settings.ui.SettingsMenuLink
 import com.focalstudio.focalhub.view.viewModel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel) {
-    val generalSettingsList by viewModel.generalSettingsList.collectAsState()
-    val accountSettingsList by viewModel.accountSettingsList.collectAsState()
+data class SettingsScreen(val viewModel: SettingsViewModel) : Screen {
 
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.current
 
-    viewModel.setNavController(navController)
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("") },
-                navigationIcon = { IconButton(onClick = { navController.navigateUp() }) {
+        val generalSettingsList by viewModel.generalSettingsList.collectAsState()
+        val accountSettingsList by viewModel.accountSettingsList.collectAsState()
+        //viewModel.setNavController(navController)
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("") },
+                    //navigationIcon = { IconButton(onClick = { navController.navigateUp() }) {
+                    navigationIcon = { IconButton(onClick = { navigator?.pop() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
+                    }
+                )
+            }
+        ) { paddingValues ->
+            LazyColumn(
+                contentPadding = paddingValues,
+                modifier = Modifier.padding(0.dp)
+            ) {
+                item {
+                    SettingsSection(title = "General Settings")
                 }
-            )
-        }
-    ) { paddingValues ->
-        LazyColumn(
-            contentPadding = paddingValues,
-            modifier = Modifier.padding(0.dp)
-        ) {
-            item {
-                SettingsSection(title = "General Settings")
-            }
-            items(generalSettingsList) { settingItem ->
-                SettingItem(setting = settingItem.name, description = settingItem.description, onClick = settingItem.onClick)
-            }
-            item {
-                SettingsSection(title = "Appearance")
-            }
-            items(accountSettingsList) { settingItem ->
-                SettingItem(setting = settingItem.name, description = settingItem.description, onClick = settingItem.onClick)
+                items(generalSettingsList) { settingItem ->
+                    SettingItem(setting = settingItem.name, description = settingItem.description, onClick = settingItem.onClick)
+                }
+                item {
+                    SettingsSection(title = "Appearance")
+                }
+                items(accountSettingsList) { settingItem ->
+                    SettingItem(setting = settingItem.name, description = settingItem.description, onClick = settingItem.onClick)
+                }
             }
         }
     }
-}
+    }
+
+
 
 
 @Composable
@@ -83,40 +91,5 @@ fun SettingItem(setting: String, description: String, onClick: () -> Unit, icon:
         action = {},
         onClick = onClick,
     )
-        //End Settings Tile
-
-        /* Own Implementation:
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(vertical = 16.dp, horizontal = 8.dp)
-                .background(MaterialTheme.colorScheme.surface),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            /*Icon(
-                imageVector = icon, // Default icon, can be overridden
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )*/
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp, start = 24.dp)
-            ) {
-                Text(
-                    text = setting,
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(bottom = 0.dp)
-                )
-                Text(
-                    text = description,
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
-            }
-
-        }*/
-
 }
 

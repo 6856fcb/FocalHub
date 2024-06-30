@@ -1,6 +1,7 @@
 package com.focalstudio.focalhub.view.activities
 
 import AppSearchDialog
+import android.app.Application
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -40,71 +41,78 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.utils.detectTwoFingerSwipeDown
 import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
+import com.focalstudio.focalhub.view.viewModel.SettingsViewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun HomeScreen(
-    navController: NavController,
-    context: Context,
-    viewModel: HomeScreenViewModel,
-    lifecycleOwner: LifecycleOwner
-) {
-    val apps by remember { mutableStateOf(viewModel.appsList) }
-    var showAppSearchDialog by remember { mutableStateOf(false) }
-    lifecycleOwner.lifecycle.addObserver(viewModel)
+data class HomeScreen(
+    val context: Context,
+    val viewModel: HomeScreenViewModel,
+    val lifecycleOwner: LifecycleOwner) : Screen{
+    @Composable
+    override fun Content() {
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Home") },
-                actions = {
-                    IconButton(onClick = { navController.navigate("settingsScreen") }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showAppSearchDialog = true }) {
-                Icon(Icons.Filled.Search, contentDescription = "Search Apps")
-            }
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .pointerInput(Unit) {
-                    detectTwoFingerSwipeDown {
-                        navController.navigate("rulesScreen") {
-                            popUpTo("rulesScreen") { inclusive = true }
-                            launchSingleTop = true
+        val navigator = LocalNavigator.current
+
+        val apps by remember { mutableStateOf(viewModel.appsList) }
+        var showAppSearchDialog by remember { mutableStateOf(false) }
+        lifecycleOwner.lifecycle.addObserver(viewModel)
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Home") },
+                    actions = {
+                        //IconButton(onClick = { navController.navigate("settingsScreen") }) {
+                        IconButton(onClick = { navigator?.push(SettingsScreen(viewModel = SettingsViewModel(application =  Application()))) }) {   // WTF!?
+                            Icon(Icons.Default.Settings, contentDescription = "Settings")
                         }
                     }
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(onClick = { showAppSearchDialog = true }) {
+                    Icon(Icons.Filled.Search, contentDescription = "Search Apps")
                 }
-        ) {
-            Text(
-                text = "Apps",
-                fontSize = 20.sp,
-                modifier = Modifier.padding(16.dp)
-            )
-            AppGrid(apps, context, viewModel)
-        }
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .pointerInput(Unit) {
+                        detectTwoFingerSwipeDown {
+                            /*navController.navigate("rulesScreen") {
+                                popUpTo("rulesScreen") { inclusive = true }
+                                launchSingleTop = true*/
+                            navigator?.replace(HomeScreen(context, viewModel, lifecycleOwner))
+                        }
+                    }
+            ) {
+                Text(
+                    text = "Apps",
+                    fontSize = 20.sp,
+                    modifier = Modifier.padding(16.dp)
+                )
+                AppGrid(apps, context, viewModel)
+            }
 
-        if (showAppSearchDialog) {
-            AppSearchDialog(
-                viewModel = viewModel,
-                onDismissRequest = { showAppSearchDialog = false },
-                context = context
-            )
+            if (showAppSearchDialog) {
+                AppSearchDialog(
+                    viewModel = viewModel,
+                    onDismissRequest = { showAppSearchDialog = false },
+                    context = context
+                )
+            }
         }
     }
+
 }
 
 @RequiresApi(Build.VERSION_CODES.O)

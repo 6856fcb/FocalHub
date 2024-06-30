@@ -18,7 +18,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
 import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
 import androidx.compose.runtime.*
 import com.alorma.compose.settings.ui.SettingsGroup

@@ -36,7 +36,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
 import com.alorma.compose.settings.ui.SettingsMenuLink
 import com.focalstudio.focalhub.utils.log
 import com.focalstudio.focalhub.view.viewModel.AppUsageViewModel
@@ -46,109 +47,118 @@ import java.text.DateFormat
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
 
-fun AppRulesScreen(navController: NavController, viewModel: AppUsageViewModel) {
+data class AppRulesScreen(val viewModel: AppUsageViewModel) : Screen {
 
-    viewModel.setNavController(navController)
-    val usageRules by remember { viewModel.usageRules }.collectAsState()
+    @Composable
+    override fun Content() {
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("App Usage Rules") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { viewModel.addUsageRule() }) {
-                Icon(Icons.Filled.Add, contentDescription = "Add Rule")
-            }
-        }
-    ) { paddingValues ->
+        val navigator = LocalNavigator.current
 
-        LazyColumn(
-            contentPadding = paddingValues,
-            modifier = Modifier.padding(0.dp)
-        ) {
-            if (usageRules.isNotEmpty()) {
-                items(usageRules) { usageRule ->
+        val usageRules by remember { viewModel.usageRules }.collectAsState()
 
-                    val color: Color =
-                        if (usageRule.isManuallyDisabled || !usageRule.isCurrentlyActive) {
-                            Color.LightGray
-                        } else {
-                            Color.Black
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("App Usage Rules") },
+                    navigationIcon = {
+                        //IconButton(onClick = { navController.navigateUp() }) {
+                        IconButton(onClick = { navigator?.pop() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
-
-                    SettingsMenuLink(
-                        title = {
-                            Text(
-                                text = if (usageRule.appList.size == 1) "Rule for " + viewModel.getAppNameForFirstAppInUsageRule(
-                                    usageRule
-                                ) else usageRule.name, color = color
-                            )
-                        },
-                        subtitle = {
-                            Text(
-                                text = if (usageRule.isCurrentlyActive) "Active" else "Not Active",
-                                color = color
-                            )
-                        },
-                        modifier = Modifier,
-                        enabled = true,
-                        icon = {
-                            if (usageRule.appList.size == 1) {
-                                val painter: Painter = rememberDrawablePainter(
-                                    viewModel.getIconForFirstAppInUsageRule(usageRule)
-                                )
-                                Image(
-                                    painter = painter,
-                                    contentDescription = "App Usage Rule",
-                                    modifier = Modifier
-                                        .size(46.dp)
-                                        .background(
-                                            color = Color.White,
-                                            shape = CircleShape
-                                        ) // For ripple effect
-                                        .padding(0.dp)
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Outlined.List,
-                                    contentDescription = null,
-                                    modifier = Modifier.padding(12.dp)
-                                )
-                            }
-                        },
-                        onClick = {
-                            navController.navigate("editUsageRule/${usageRule.id}")
-                        },
-                    )
+                    }
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(onClick = { viewModel.addUsageRule() }) {
+                    Icon(Icons.Filled.Add, contentDescription = "Add Rule")
                 }
-            } else {
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp, horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "No App usage restrictions added yet",
-                            fontSize = 16.sp,
-                            modifier = Modifier.padding(bottom = 0.dp)
+            }
+        ) { paddingValues ->
+
+            LazyColumn(
+                contentPadding = paddingValues,
+                modifier = Modifier.padding(0.dp)
+            ) {
+                if (usageRules.isNotEmpty()) {
+                    items(usageRules) { usageRule ->
+
+                        val color: Color =
+                            if (usageRule.isManuallyDisabled || !usageRule.isCurrentlyActive) {
+                                Color.LightGray
+                            } else {
+                                Color.Black
+                            }
+
+                        SettingsMenuLink(
+                            title = {
+                                Text(
+                                    text = if (usageRule.appList.size == 1) "Rule for " + viewModel.getAppNameForFirstAppInUsageRule(
+                                        usageRule
+                                    ) else usageRule.name, color = color
+                                )
+                            },
+                            subtitle = {
+                                Text(
+                                    text = if (usageRule.isCurrentlyActive) "Active" else "Not Active",
+                                    color = color
+                                )
+                            },
+                            modifier = Modifier,
+                            enabled = true,
+                            icon = {
+                                if (usageRule.appList.size == 1) {
+                                    val painter: Painter = rememberDrawablePainter(
+                                        viewModel.getIconForFirstAppInUsageRule(usageRule)
+                                    )
+                                    Image(
+                                        painter = painter,
+                                        contentDescription = "App Usage Rule",
+                                        modifier = Modifier
+                                            .size(46.dp)
+                                            .background(
+                                                color = Color.White,
+                                                shape = CircleShape
+                                            ) // For ripple effect
+                                            .padding(0.dp)
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Outlined.List,
+                                        contentDescription = null,
+                                        modifier = Modifier.padding(12.dp)
+                                    )
+                                }
+                            },
+                            onClick = {
+                                //navController.navigate("editUsageRule/${usageRule.id}")
+                                navigator?.push(AppRulesScreen(viewModel))  // TODO: Fix this
+                            },
                         )
+                    }
+                } else {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "No App usage restrictions added yet",
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(bottom = 0.dp)
+                            )
+                        }
                     }
                 }
             }
         }
     }
+
+
+
 }
 
 

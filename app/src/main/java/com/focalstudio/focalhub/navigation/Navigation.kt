@@ -25,6 +25,7 @@ import com.focalstudio.focalhub.view.activities.EditAppUsageScreen
 import com.focalstudio.focalhub.view.viewModel.AppUsageViewModel
 
 
+/*
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Navigation(lifecycleOwner: LifecycleOwner) {
@@ -87,6 +88,8 @@ fun Navigation(lifecycleOwner: LifecycleOwner) {
         }
     }
 }
+
+*/
 
 
 
