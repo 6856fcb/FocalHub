@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.navigator.LocalNavigator
 import com.focalstudio.focalhub.data.RuleRepositoryProvider
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.model.UsageRule
@@ -28,6 +29,8 @@ import java.util.Date
 
 class AppUsageViewModel(application: Application) : AndroidViewModel(application) {
 
+
+
     private val _appsList = mutableStateOf<List<App>>(emptyList())
     val appsList: State<List<App>> get() = _appsList
 
@@ -35,7 +38,8 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
     val usageRules: StateFlow<List<UsageRule>> get() = _usageRules
 
     private val ruleRepository = RuleRepositoryProvider.getInstance(application)
-    private var navController: NavController? = null
+
+    val navigator = LocalNavigator.current
 
     private var periodicRuleCheckJob: Job? = null
 

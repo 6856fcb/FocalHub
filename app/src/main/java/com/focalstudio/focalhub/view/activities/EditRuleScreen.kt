@@ -20,6 +20,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
 import androidx.compose.runtime.*
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
 import com.alorma.compose.settings.ui.SettingsGroup
 import com.alorma.compose.settings.ui.SettingsMenuLink
 import com.alorma.compose.settings.ui.SettingsSwitch
@@ -35,239 +37,247 @@ fun getSelectedWeekdaysString(selectedWeekdays: List<Int>): String {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun EditRuleScreen(
-    navController: NavController,
-    viewModel: RulesManagerViewModel,
-    rule: DisplayRule,
-    context: Context
-) {
-    var name by remember { mutableStateOf(rule.name) }
-    var isActive by remember { mutableStateOf(rule.isActive) }
-    var isBlacklist by remember { mutableStateOf(rule.isBlacklist) }
-    var isRecurring by remember { mutableStateOf(rule.isRecurring) }
-    var isDisabled by remember { mutableStateOf(rule.isDisabled) }
-    var isEndTimeSet by remember { mutableStateOf(rule.isEndTimeSet) }
-    var selectedStartTime by remember { mutableStateOf(rule.startTime) }
-    var selectedEndTime by remember { mutableStateOf(rule.endTime) }
-    var selectedWeekdays by remember { mutableStateOf(rule.weekdays) }
-    var showAppSelectionDialog by remember { mutableStateOf(false) }
+data class EditRuleScreen(
+    val viewModel: RulesManagerViewModel,
+    val rule: DisplayRule,
+    val context: Context
+) : Screen {
 
-    val apps by remember { mutableStateOf(viewModel.appsList) }
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.current
+
+        var name by remember { mutableStateOf(rule.name) }
+        var isActive by remember { mutableStateOf(rule.isActive) }
+        var isBlacklist by remember { mutableStateOf(rule.isBlacklist) }
+        var isRecurring by remember { mutableStateOf(rule.isRecurring) }
+        var isDisabled by remember { mutableStateOf(rule.isDisabled) }
+        var isEndTimeSet by remember { mutableStateOf(rule.isEndTimeSet) }
+        var selectedStartTime by remember { mutableStateOf(rule.startTime) }
+        var selectedEndTime by remember { mutableStateOf(rule.endTime) }
+        var selectedWeekdays by remember { mutableStateOf(rule.weekdays) }
+        var showAppSelectionDialog by remember { mutableStateOf(false) }
+
+        val apps by remember { mutableStateOf(viewModel.appsList) }
 
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = "Edit Rule") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = "Edit Rule") },
+                    navigationIcon = {
+                        //IconButton(onClick = { navController.navigateUp() }) {
+                        IconButton(onClick = { navigator?.pop() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
                     }
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(onClick = { viewModel.deleteRule(rule.id) }) {
+                    Icon(Icons.Filled.Delete, contentDescription = "Delete Rule")
                 }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { viewModel.deleteRule(rule.id) }) {
-                Icon(Icons.Filled.Delete, contentDescription = "Delete Rule")
             }
-        }
 
 
-    ) { paddingValues ->
-        SettingsGroup(
-            modifier = Modifier,
-            title = { Text(rule.name) },
-            contentPadding = paddingValues,
-        ) {
-            SettingsSwitch(
-                state = isActive,
-                title = { Text(text = "Rule active") },
-                subtitle = {},
+        ) { paddingValues ->
+            SettingsGroup(
                 modifier = Modifier,
-                enabled = !isRecurring,
-                icon = {},
-                onCheckedChange = { newState: Boolean ->
-                    isActive = newState
-                    viewModel.updateRuleIsActive(rule.id, isActive)
-                },
-            )
-            SettingsMenuLink(
-                title = { Text(text = "Change Rule name") },
-                subtitle = {},
-                modifier = Modifier,
-                enabled = true,
-                icon = {},
-                action = {},
-                onClick = {},
-            )
-            SettingsMenuLink(
-                title = { Text(text = "Choose Apps") },
-                subtitle = {},
-                modifier = Modifier,
-                enabled = true,
-                icon = {},
-                action = {},
-                onClick = {
-                    showAppSelectionDialog = true
-                },
-            )
-            SettingsSwitch(
-                state = isBlacklist,
-                title = { Text(text = "Blacklist Mode") },
-                subtitle = { Text(text = "Exclude selected apps") },
-                modifier = Modifier,
-                enabled = true,
-                icon = {},
-                onCheckedChange = { newState: Boolean ->
-                    isBlacklist = newState
-                    viewModel.updateRuleIsBlacklist(rule.id, isBlacklist)
-                },//
-            )
-            SettingsSwitch(
-                state = isRecurring,
-                title = { Text(text = "Recurring Rule") },
-                subtitle = { Text(text = "Active at the selected time and days") },
-                modifier = Modifier,
-                enabled = true,
-                icon = {},
-                onCheckedChange = { newState: Boolean ->
-                    isRecurring = newState
-                    viewModel.updateRuleIsRecurring(rule.id, isRecurring)
-                },
-            )
-            if (isRecurring) {
+                title = { Text(rule.name) },
+                contentPadding = paddingValues,
+            ) {
                 SettingsSwitch(
-                    state = isDisabled,
-                    title = { Text(text = "Disable Rule") },
+                    state = isActive,
+                    title = { Text(text = "Rule active") },
                     subtitle = {},
                     modifier = Modifier,
-                    enabled = isRecurring,
+                    enabled = !isRecurring,
                     icon = {},
                     onCheckedChange = { newState: Boolean ->
-                        isDisabled = newState
-                        viewModel.updateRuleIsDisabled(rule.id, isDisabled)
+                        isActive = newState
+                        viewModel.updateRuleIsActive(rule.id, isActive)
                     },
                 )
-
                 SettingsMenuLink(
-                    title = { Text(text = "Select Weekdays") },
-                    subtitle = { Text(text = "Active on ${getSelectedWeekdaysString(selectedWeekdays)}") },
+                    title = { Text(text = "Change Rule name") },
+                    subtitle = {},
+                    modifier = Modifier,
+                    enabled = true,
+                    icon = {},
+                    action = {},
+                    onClick = {},
+                )
+                SettingsMenuLink(
+                    title = { Text(text = "Choose Apps") },
+                    subtitle = {},
                     modifier = Modifier,
                     enabled = true,
                     icon = {},
                     action = {},
                     onClick = {
-                        val daysOfWeek = arrayOf(
-                            "Sunday", "Monday", "Tuesday", "Wednesday",
-                            "Thursday", "Friday", "Saturday"
-                        )
-                        val selectedItems = BooleanArray(daysOfWeek.size) { selectedWeekdays.contains(it + 1) }
-
-                        AlertDialog.Builder(context)
-                            .setTitle("Select Weekdays")
-                            .setMultiChoiceItems(daysOfWeek, selectedItems) { _, which, isChecked ->
-                                if (isChecked) {
-                                    selectedWeekdays = selectedWeekdays + (which + 1)
-                                } else {
-                                    selectedWeekdays = selectedWeekdays - (which + 1)
-                                }
-                                viewModel.updateRuleWeekdays(rule.id, selectedWeekdays)
-                            }
-                            .setPositiveButton("OK") { dialog, _ ->
-                                dialog.dismiss()
-                            }
-                            .show()
+                        showAppSelectionDialog = true
                     },
                 )
-                SettingsMenuLink(
-                    title = { Text(text = "Choose start time") },
-                    subtitle = { Text(text = "Rule starts at ${DateFormat.getTimeInstance(DateFormat.SHORT).format(selectedStartTime)}") },
-                    modifier = Modifier,
-                    enabled = true,
-                    icon = {},
-                    action = {},
-                    onClick = {
-                        val startCalendar = Calendar.getInstance()
-                        startCalendar.time = selectedStartTime
-                        val startHour = startCalendar.get(Calendar.HOUR_OF_DAY)
-                        val startMinute = startCalendar.get(Calendar.MINUTE)
-
-                        val startTimePickerDialog = TimePickerDialog(
-                            context,
-                            { _, selectedHour, selectedMinute ->
-                                val updatedStartTime = Calendar.getInstance()
-                                updatedStartTime.set(Calendar.HOUR_OF_DAY, selectedHour)
-                                updatedStartTime.set(Calendar.MINUTE, selectedMinute)
-                                selectedStartTime = updatedStartTime.time
-                                viewModel.updateRuleStartTime(rule.id, selectedStartTime)
-                            },
-                            startHour,
-                            startMinute,
-                            true
-                        )
-                        startTimePickerDialog.show()
-                    },
-                )
-            } else {
                 SettingsSwitch(
-                    state = isEndTimeSet,
-                    title = { Text(text = "Set end time") },
-                    subtitle = { Text(text = "Disable Rule at specific time") },
+                    state = isBlacklist,
+                    title = { Text(text = "Blacklist Mode") },
+                    subtitle = { Text(text = "Exclude selected apps") },
                     modifier = Modifier,
                     enabled = true,
                     icon = {},
                     onCheckedChange = { newState: Boolean ->
-                        isEndTimeSet = newState
-                        viewModel.updateRuleIsEndTimeSet(rule.id, isEndTimeSet)
-                    },
+                        isBlacklist = newState
+                        viewModel.updateRuleIsBlacklist(rule.id, isBlacklist)
+                    },//
                 )
-            }
-
-            if (isEndTimeSet || isRecurring) {
-                SettingsMenuLink(
-                    title = { Text(text = "Choose end time") },
-                    subtitle = { Text(text = "Rule ends at ${DateFormat.getTimeInstance(DateFormat.SHORT).format(selectedEndTime)}") },
+                SettingsSwitch(
+                    state = isRecurring,
+                    title = { Text(text = "Recurring Rule") },
+                    subtitle = { Text(text = "Active at the selected time and days") },
                     modifier = Modifier,
                     enabled = true,
                     icon = {},
-                    action = {},
-                    onClick = {
-                        val endCalendar = Calendar.getInstance()
-                        endCalendar.time = selectedEndTime
-                        val endHour = endCalendar.get(Calendar.HOUR_OF_DAY)
-                        val endMinute = endCalendar.get(Calendar.MINUTE)
-
-                        val endTimePickerDialog = TimePickerDialog(
-                            context,
-                            { _, selectedHour, selectedMinute ->
-                                val updatedEndTime = Calendar.getInstance()
-                                updatedEndTime.set(Calendar.HOUR_OF_DAY, selectedHour)
-                                updatedEndTime.set(Calendar.MINUTE, selectedMinute)
-                                selectedEndTime = updatedEndTime.time
-                                viewModel.updateRuleEndTime(rule.id, selectedEndTime)
-                            },
-                            endHour,
-                            endMinute,
-                            true
-                        )
-                        endTimePickerDialog.show()
+                    onCheckedChange = { newState: Boolean ->
+                        isRecurring = newState
+                        viewModel.updateRuleIsRecurring(rule.id, isRecurring)
                     },
                 )
-            }
+                if (isRecurring) {
+                    SettingsSwitch(
+                        state = isDisabled,
+                        title = { Text(text = "Disable Rule") },
+                        subtitle = {},
+                        modifier = Modifier,
+                        enabled = isRecurring,
+                        icon = {},
+                        onCheckedChange = { newState: Boolean ->
+                            isDisabled = newState
+                            viewModel.updateRuleIsDisabled(rule.id, isDisabled)
+                        },
+                    )
 
-            if (showAppSelectionDialog) {
-                RulesAppSelectionDialog(
-                    viewModel = viewModel,
-                    ruleId = rule.id,
-                    onDismissRequest = { showAppSelectionDialog = false }
-                ) { selectedApps ->
-                    viewModel.updateRuleAppList(rule.id, selectedApps)
-                    showAppSelectionDialog = false
+                    SettingsMenuLink(
+                        title = { Text(text = "Select Weekdays") },
+                        subtitle = { Text(text = "Active on ${getSelectedWeekdaysString(selectedWeekdays)}") },
+                        modifier = Modifier,
+                        enabled = true,
+                        icon = {},
+                        action = {},
+                        onClick = {
+                            val daysOfWeek = arrayOf(
+                                "Sunday", "Monday", "Tuesday", "Wednesday",
+                                "Thursday", "Friday", "Saturday"
+                            )
+                            val selectedItems = BooleanArray(daysOfWeek.size) { selectedWeekdays.contains(it + 1) }
+
+                            AlertDialog.Builder(context)
+                                .setTitle("Select Weekdays")
+                                .setMultiChoiceItems(daysOfWeek, selectedItems) { _, which, isChecked ->
+                                    if (isChecked) {
+                                        selectedWeekdays = selectedWeekdays + (which + 1)
+                                    } else {
+                                        selectedWeekdays = selectedWeekdays - (which + 1)
+                                    }
+                                    viewModel.updateRuleWeekdays(rule.id, selectedWeekdays)
+                                }
+                                .setPositiveButton("OK") { dialog, _ ->
+                                    dialog.dismiss()
+                                }
+                                .show()
+                        },
+                    )
+                    SettingsMenuLink(
+                        title = { Text(text = "Choose start time") },
+                        subtitle = { Text(text = "Rule starts at ${DateFormat.getTimeInstance(DateFormat.SHORT).format(selectedStartTime)}") },
+                        modifier = Modifier,
+                        enabled = true,
+                        icon = {},
+                        action = {},
+                        onClick = {
+                            val startCalendar = Calendar.getInstance()
+                            startCalendar.time = selectedStartTime
+                            val startHour = startCalendar.get(Calendar.HOUR_OF_DAY)
+                            val startMinute = startCalendar.get(Calendar.MINUTE)
+
+                            val startTimePickerDialog = TimePickerDialog(
+                                context,
+                                { _, selectedHour, selectedMinute ->
+                                    val updatedStartTime = Calendar.getInstance()
+                                    updatedStartTime.set(Calendar.HOUR_OF_DAY, selectedHour)
+                                    updatedStartTime.set(Calendar.MINUTE, selectedMinute)
+                                    selectedStartTime = updatedStartTime.time
+                                    viewModel.updateRuleStartTime(rule.id, selectedStartTime)
+                                },
+                                startHour,
+                                startMinute,
+                                true
+                            )
+                            startTimePickerDialog.show()
+                        },
+                    )
+                } else {
+                    SettingsSwitch(
+                        state = isEndTimeSet,
+                        title = { Text(text = "Set end time") },
+                        subtitle = { Text(text = "Disable Rule at specific time") },
+                        modifier = Modifier,
+                        enabled = true,
+                        icon = {},
+                        onCheckedChange = { newState: Boolean ->
+                            isEndTimeSet = newState
+                            viewModel.updateRuleIsEndTimeSet(rule.id, isEndTimeSet)
+                        },
+                    )
+                }
+
+                if (isEndTimeSet || isRecurring) {
+                    SettingsMenuLink(
+                        title = { Text(text = "Choose end time") },
+                        subtitle = { Text(text = "Rule ends at ${DateFormat.getTimeInstance(DateFormat.SHORT).format(selectedEndTime)}") },
+                        modifier = Modifier,
+                        enabled = true,
+                        icon = {},
+                        action = {},
+                        onClick = {
+                            val endCalendar = Calendar.getInstance()
+                            endCalendar.time = selectedEndTime
+                            val endHour = endCalendar.get(Calendar.HOUR_OF_DAY)
+                            val endMinute = endCalendar.get(Calendar.MINUTE)
+
+                            val endTimePickerDialog = TimePickerDialog(
+                                context,
+                                { _, selectedHour, selectedMinute ->
+                                    val updatedEndTime = Calendar.getInstance()
+                                    updatedEndTime.set(Calendar.HOUR_OF_DAY, selectedHour)
+                                    updatedEndTime.set(Calendar.MINUTE, selectedMinute)
+                                    selectedEndTime = updatedEndTime.time
+                                    viewModel.updateRuleEndTime(rule.id, selectedEndTime)
+                                },
+                                endHour,
+                                endMinute,
+                                true
+                            )
+                            endTimePickerDialog.show()
+                        },
+                    )
+                }
+
+                if (showAppSelectionDialog) {
+                    RulesAppSelectionDialog(
+                        viewModel = viewModel,
+                        ruleId = rule.id,
+                        onDismissRequest = { showAppSelectionDialog = false }
+                    ) { selectedApps ->
+                        viewModel.updateRuleAppList(rule.id, selectedApps)
+                        showAppSelectionDialog = false
+                    }
                 }
             }
         }
     }
+
+
+
 }
 
 
