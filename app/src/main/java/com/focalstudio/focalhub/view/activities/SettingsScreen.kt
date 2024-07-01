@@ -32,7 +32,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("") },
+                title = { Text("Settings") },
                 navigationIcon = { IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }

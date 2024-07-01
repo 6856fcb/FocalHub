@@ -310,6 +310,7 @@ fun NumberPickerDialog(
                     range = range,
                     onValueChange = {
                         currentValue = it
+
                     }
                 )
 
