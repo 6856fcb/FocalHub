@@ -15,14 +15,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -38,10 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.alorma.compose.settings.ui.SettingsMenuLink
-import com.focalstudio.focalhub.utils.log
 import com.focalstudio.focalhub.view.viewModel.AppUsageViewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import java.text.DateFormat
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -119,7 +114,7 @@ fun AppRulesScreen(navController: NavController, viewModel: AppUsageViewModel) {
                                 )
                             } else {
                                 Icon(
-                                    Icons.Outlined.List,
+                                    Icons.Filled.AddCircle,
                                     contentDescription = null,
                                     modifier = Modifier.padding(12.dp)
                                 )

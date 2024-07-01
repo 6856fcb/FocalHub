@@ -17,14 +17,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
-import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
-import androidx.compose.runtime.*
 import com.alorma.compose.settings.ui.SettingsGroup
 import com.alorma.compose.settings.ui.SettingsMenuLink
 import com.alorma.compose.settings.ui.SettingsSwitch
 import com.focalstudio.focalhub.data.model.DisplayRule
+import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
 import java.text.DateFormat
 import java.util.Calendar
 
@@ -84,7 +86,7 @@ fun EditRuleScreen(
             SettingsSwitch(
                 state = isActive,
                 title = { Text(text = "Rule active") },
-                subtitle = {},
+                subtitle = {Text(text = if (isActive) "Selected Apps will ${if (isBlacklist) "not " else ""}be shown" else "Rule is inactive does nothing")},
                 modifier = Modifier,
                 enabled = !isRecurring,
                 icon = {},
@@ -104,7 +106,7 @@ fun EditRuleScreen(
             )
             SettingsMenuLink(
                 title = { Text(text = "Choose Apps") },
-                subtitle = {},
+                subtitle = {Text(text = "Choose Apps to show or hide in launcher")},
                 modifier = Modifier,
                 enabled = true,
                 icon = {},
@@ -116,7 +118,7 @@ fun EditRuleScreen(
             SettingsSwitch(
                 state = isBlacklist,
                 title = { Text(text = "Blacklist Mode") },
-                subtitle = { Text(text = "Exclude selected apps") },
+                subtitle = { Text(text = "Hide the selected Apps") },
                 modifier = Modifier,
                 enabled = true,
                 icon = {},

@@ -3,10 +3,10 @@ package com.focalstudio.focalhub.view.viewModel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import androidx.navigation.NavController
 
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
@@ -31,8 +31,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             // Load general settings
             _generalSettingsList.value = listOf(
-                SettingItem("Manage Rules", "Set rules for dynamic app selection") { handleSettingClick("Manage Rules") },
-                SettingItem("Manage Apps", "Restrict App Usage Times") { handleSettingClick("Manage Apps") },
+                SettingItem("Manage Home-screen Rules", "Set rules to change what apps are shown") { handleSettingClick("Manage Rules") },
+                SettingItem("Manage App Usage", "Restrict app usage times or block apps") { handleSettingClick("Manage Apps") },
                 SettingItem("Backup Settings", "Backup your settings data") { handleSettingClick("Backup Settings") }
             )
             // Load account settings
