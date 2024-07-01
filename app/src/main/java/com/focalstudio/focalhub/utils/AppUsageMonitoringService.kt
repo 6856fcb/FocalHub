@@ -6,6 +6,7 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
+import android.widget.Toast
 import com.focalstudio.focalhub.data.RuleRepositoryProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +22,7 @@ class AppUsageMonitoringService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         coroutineScope.launch {
             while (true) {
+
                 monitorAppUsage()
                 delay(5000) // Check every 5 seconds (Maybe set in settings later on)
             }
@@ -42,6 +44,7 @@ class AppUsageMonitoringService : Service() {
 
         // Iterate through events to find latest foreground app
         while (usageEvents.hasNextEvent()) {
+
             val event = UsageEvents.Event()
             usageEvents.getNextEvent(event)
 
@@ -49,15 +52,28 @@ class AppUsageMonitoringService : Service() {
                 currentAppPackage = event.packageName
             }
         }
+        log("Current app package: $currentAppPackage")
 
-        currentAppPackage?.let { appPackageName ->
+
+        if (
+            !isAppAllowed(currentAppPackage!!, this)) {
+                launchLauncher()
+            }
+
+
+
+
+
+        /*currentAppPackage?.let { appPackageName -> log("appPackageName: $appPackageName lastAppPackage: $lastAppPackage")
             if (appPackageName != lastAppPackage) {
+                log("Test11111")
                 lastAppPackage = appPackageName
                 if (!isAppAllowed(appPackageName, this)) {
+                    log("App $appPackageName is not allowed", "AppUsageMonitoringService")
                     launchLauncher()
                 }
             }
-        }
+        }*/
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -73,21 +89,42 @@ class AppUsageMonitoringService : Service() {
     private suspend fun isAppAllowed(packageName: String, context: Context): Boolean {
         val usageRules = RuleRepositoryProvider.getInstance(context).getUsageRules()
         if (usageRules.isNotEmpty()) {
+            var appFoundInARule = false
+
             for (usageRule in usageRules) {
+
+
                 if (usageRule.appList.contains(packageName)) {
+                    appFoundInARule = true
                     val ruleActive = shouldNonLinkedUsageRuleBeCurrentlyActive(usageRule)
                     val noTimeLeft = !isAppUsagePermittedByUsageRule(usageRule, context)
+                    // Usage Rule active (In set time windows) and not linked
+                    if ((ruleActive &&
+                                (usageRule.isRestrictedUntilEndTime
+                                        || usageRule.isRecurring
+                                        || (noTimeLeft && usageRule.restrictUsageTimePerApp))) &&
 
-                    return !((ruleActive &&
-                            (usageRule.isRestrictedUntilEndTime
-                                    || usageRule.isRecurring
-                                    || (noTimeLeft && usageRule.restrictUsageTimePerApp))) &&
-
-                            ((noTimeLeft && usageRule.restrictUsageTimePerApp) ||
-                                    !usageRule.restrictUsageTimePerApp))
+                        ((noTimeLeft && usageRule.restrictUsageTimePerApp) ||
+                                !usageRule.restrictUsageTimePerApp)
+                    ) {
+                        if (noTimeLeft) {
+                            return false
+                        } else {
+                            return false
+                        }
+                    } else {
+                        return true
+                    }
                 }
             }
+            if (!appFoundInARule) {
+                return true
+
+            }
+        } else {
+            return true
         }
         return true
     }
+
 }
