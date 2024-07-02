@@ -62,7 +62,7 @@ class AppUsageMonitoringService : Service() {
             }
         }
 
-
+        /*
         currentAppPackage?.let { appPackageName ->
             if (appPackageName != lastAppPackage) {
 
@@ -73,6 +73,8 @@ class AppUsageMonitoringService : Service() {
                 }
             }
         }
+        */
+
     }
 
     override fun onBind(intent: Intent?): IBinder? {
