@@ -7,7 +7,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -18,8 +18,7 @@ import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.model.DisplayRule
 import com.focalstudio.focalhub.data.model.UsageRule
 import com.focalstudio.focalhub.utils.applyDisplayRules
-import com.focalstudio.focalhub.utils.getAppUsageTimeInSeconds
-import com.focalstudio.focalhub.utils.log
+import com.focalstudio.focalhub.utils.isAppUsagePermittedByUsageRule
 import com.focalstudio.focalhub.utils.shouldDisplayRuleBeCurrentlyActive
 import com.focalstudio.focalhub.utils.shouldNonLinkedUsageRuleBeCurrentlyActive
 import kotlinx.coroutines.Job
@@ -98,7 +97,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
                         )
                     }
                 val filteredApps = applyDisplayRules(apps, rules.value)
-                _appsList.value = filteredApps
+                _appsList.value = filteredApps.filter { it.packageName != "com.focalstudio.focalhub" }
                 _allAppsList.value = apps
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -124,13 +123,13 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
         periodicRuleCheckJob = viewModelScope.launch {
             while (true) {
                 loadApps()
-                delay(60000) // Check every 60 seconds
+                delay(3000) // Check every 1 seconds
             }
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun appIconClicked(app: App, context: Context) {
+    fun appIconClicked(app: App, context: Context) {
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         val vibrationEffect = VibrationEffect.createOneShot(10, VibrationEffect.DEFAULT_AMPLITUDE)
         vibrator.vibrate(vibrationEffect)
@@ -138,7 +137,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
         tryAppLaunchAndApplyUsageRules(app, context)
     }
 
-    private suspend fun tryAppLaunchAndApplyUsageRules(app: App, context: Context) {
+    private fun tryAppLaunchAndApplyUsageRules(app: App, context: Context) {
         if (usageRules.value.isNotEmpty()) {
             var appFoundInARule = false
 
@@ -147,15 +146,27 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
 
                 if (usageRule.appList.contains(app.packageName)) {
                     appFoundInARule = true
+                    val ruleActive = shouldNonLinkedUsageRuleBeCurrentlyActive(usageRule)
+                    val noTimeLeft = !isAppUsagePermittedByUsageRule(usageRule, context)
+                    // Usage Rule active (In set time windows) and not linked
+                    if ((ruleActive &&
+                                (usageRule.isRestrictedUntilEndTime
+                                || usageRule.isRecurring
+                                || (noTimeLeft && usageRule.restrictUsageTimePerApp))) &&
 
-                    if (shouldNonLinkedUsageRuleBeCurrentlyActive(usageRule) && !usageRule.isLinkedToDisplayRule) {
-                        // Apply Constraints -> app, usage rule
-                    } else if (usageRule.isLinkedToDisplayRule) {
-                        ruleRepository.getDisplayRuleById(usageRule.linkedRuleId)?.let {
-                            shouldDisplayRuleBeCurrentlyActive(it)
-                        }
-                        // Apply Constraints -> app, usage rule
-                    } else {
+                        ((noTimeLeft && usageRule.restrictUsageTimePerApp) ||
+                                !usageRule.restrictUsageTimePerApp)
+                        )
+                    {
+                    if (noTimeLeft) {
+                        Toast.makeText(context, "Daily Usage Limit Reached", Toast.LENGTH_SHORT).show()}
+                        else {
+                        Toast.makeText(context, "App start not allowed at the Moment", Toast.LENGTH_SHORT).show()
+                    }
+                    // Linked to display Rule
+                    }
+
+                    else {
                         launchApp(context, app)
                     }
                 }
@@ -168,7 +179,6 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
             launchApp(context, app)
         }
     }
-
     private fun launchApp(context: Context, app: App) {
         val launchIntent = context.packageManager.getLaunchIntentForPackage(app.packageName)
         launchIntent?.let { context.startActivity(it) }

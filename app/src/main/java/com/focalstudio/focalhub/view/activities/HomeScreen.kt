@@ -7,6 +7,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -30,12 +31,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.focalstudio.focalhub.data.model.App
+import com.focalstudio.focalhub.utils.detectTwoFingerSwipeDown
 import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import kotlinx.coroutines.launch
@@ -43,10 +50,16 @@ import kotlinx.coroutines.launch
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController, context: Context, viewModel: HomeScreenViewModel, lifecycleOwner: LifecycleOwner) {
+fun HomeScreen(
+    navController: NavController,
+    context: Context,
+    viewModel: HomeScreenViewModel,
+    lifecycleOwner: LifecycleOwner
+) {
     val apps by remember { mutableStateOf(viewModel.appsList) }
     var showAppSearchDialog by remember { mutableStateOf(false) }
     lifecycleOwner.lifecycle.addObserver(viewModel)
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -64,7 +77,18 @@ fun HomeScreen(navController: NavController, context: Context, viewModel: HomeSc
             }
         }
     ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues)) {
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .pointerInput(Unit) {
+                    detectTwoFingerSwipeDown {
+                        navController.navigate("rulesScreen") {
+                            popUpTo("rulesScreen") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+        ) {
             Text(
                 text = "Apps",
                 fontSize = 20.sp,
@@ -82,7 +106,6 @@ fun HomeScreen(navController: NavController, context: Context, viewModel: HomeSc
         }
     }
 }
-
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -123,7 +146,9 @@ fun AppItem(app: App, context: Context, viewModel: HomeScreenViewModel) {
             contentDescription = app.name,
             modifier = Modifier
                 .size(46.dp)
-                .background(color = Color.White, shape = androidx.compose.foundation.shape.CircleShape) // For ripple effect
+                .background(
+                    color = Color.Transparent,
+                    shape = androidx.compose.foundation.shape.CircleShape)
                 .padding(0.dp)
         )
         Text(

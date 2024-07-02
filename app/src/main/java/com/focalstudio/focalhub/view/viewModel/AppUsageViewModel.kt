@@ -5,28 +5,27 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.focalstudio.focalhub.data.RuleRepositoryProvider
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.model.UsageRule
+import com.focalstudio.focalhub.utils.log
+import com.focalstudio.focalhub.utils.shouldNonLinkedUsageRuleBeCurrentlyActive
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.*
-import androidx.compose.ui.platform.LocalContext
-import com.focalstudio.focalhub.data.model.DisplayRule
-import com.focalstudio.focalhub.utils.log
+import java.util.Date
 
 class AppUsageViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -62,7 +61,7 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
                         )
                     }
 
-                _appsList.value = apps
+                _appsList.value = apps.filter { it.packageName != "com.focalstudio.focalhub" }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -180,28 +179,19 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
         updateRuleField(ruleId) { it.copy(maxUsageDurationInSeconds = maxDuration) }
     }
 
-    fun setUseMaxSessionTimes(ruleId: Int, useMax: Boolean) {
-        updateRuleField(ruleId) { it.copy(useMaxSessionTimes = useMax) }
-    }
-
-    fun setDisplaySessionDurationDialog(ruleId: Int, display: Boolean) {
-        updateRuleField(ruleId) { it.copy(displaySessionDurationDialog = display) }
-    }
-
-    fun setMaxSessionDurationInSeconds(ruleId: Int, maxDuration: Int) {
-        updateRuleField(ruleId) { it.copy(maxSessionDurationInSeconds = maxDuration) }
-    }
-
     fun setRestrictUntilEndTime(ruleId: Int, restrict: Boolean) {
         updateRuleField(ruleId) { it.copy(isRestrictedUntilEndTime = restrict) }
+        checkActiveRules()
     }
 
     fun setTimeWindowStartTime(ruleId: Int, startTime: Date) {
         updateRuleField(ruleId) { it.copy(timeWindowStartTime = startTime) }
+        checkActiveRules()
     }
 
     fun setTimeWindowEndTime(ruleId: Int, endTime: Date) {
         updateRuleField(ruleId) { it.copy(timeWindowEndTime = endTime) }
+        checkActiveRules()
     }
     fun deleteUsageRule(ruleId: Int) {
         viewModelScope.launch {
@@ -232,7 +222,6 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
                 ruleRepository.updateUsageRule(currentRules[index])
             }
         }
-        //loadUsageRules()
     }
 
     @Composable
@@ -268,17 +257,30 @@ class AppUsageViewModel(application: Application) : AndroidViewModel(application
         for (app in appsList.value) {
             log(app.packageName)
             if (usageRule.appList.contains(app.packageName)) {
-                log("plus type 1")
                 appList.add(app)
             } else if (!isAppInAnyUsageRule(app)) {
-                log("plus type 2")
                 appList.add(app)
-            } else {
-                log("not, type 3")
             }
         }
         log(appList.size)
         return appList
+    }
+
+    fun setWeekdays(ruleId: Int, weekdays: List<Int>) {
+        updateRuleField(ruleId) { it.copy(weekdays = weekdays) }
+        checkActiveRules()
+    }
+
+    private fun checkActiveRules() {
+        _usageRules.value.forEach { rule ->
+            val isCurrentlyActive = shouldNonLinkedUsageRuleBeCurrentlyActive(rule)
+            setIsCurrentlyActive(rule.id, isCurrentlyActive)
+        }
+    }
+
+    fun setIsRecurring(ruleId: Int, rec: Boolean) {
+        updateRuleField(ruleId) { it.copy(isRecurring = rec) }
+        checkActiveRules()
     }
 
 

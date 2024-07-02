@@ -14,6 +14,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -73,9 +74,9 @@ fun RulesManagerScreen(navController: NavController, viewModel: RulesManagerView
         ) {
             item {
                 val color: Color = if (!noActiveRules) {
-                    Color.LightGray
-                } else {
                     Color.Black
+                } else {
+                    Color.LightGray
                 }
                 SettingsMenuLink(
                     title = { Text(text = "Default Rule", color = color) },
@@ -103,7 +104,8 @@ fun RulesManagerScreen(navController: NavController, viewModel: RulesManagerView
                 val color: Color = if ((rule.isDisabled && rule.isRecurring) || !isActive) {
                     Color.LightGray
                 } else {
-                    Color.Black
+                    //Color.Black
+                    MaterialTheme.colorScheme.secondary
                 }
 
                 SettingsMenuLink(

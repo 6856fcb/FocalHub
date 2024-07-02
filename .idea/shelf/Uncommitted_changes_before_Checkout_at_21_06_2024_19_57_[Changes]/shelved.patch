@@ -1,0 +1,111 @@
+Index: app/src/main/java/com/focalstudio/focalhub/utils/UsageManager.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.focalstudio.focalhub.utils\r\n\r\nimport android.app.usage.UsageStatsManager\r\nimport android.content.Context\r\n\r\nfun getAppUsageTimeInSeconds(context: Context, packageName: String, startTime: Long? = null, endTime: Long? = null): Long {\r\n    val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager\r\n    val end = endTime ?: System.currentTimeMillis()\r\n    val start = startTime ?: getStartOfDay()\r\n\r\n    val usageStatsList = usageStatsManager.queryUsageStats(\r\n        UsageStatsManager.INTERVAL_DAILY, start, end\r\n    )\r\n\r\n    var totalTime = 0L\r\n\r\n    for (usageStats in usageStatsList) {\r\n        if (usageStats.packageName == packageName) {\r\n            totalTime += usageStats.totalTimeInForeground\r\n        }\r\n    }\r\n\r\n    return totalTime / 1000 // Convert milliseconds to seconds\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/focalstudio/focalhub/utils/UsageManager.kt b/app/src/main/java/com/focalstudio/focalhub/utils/UsageManager.kt
+--- a/app/src/main/java/com/focalstudio/focalhub/utils/UsageManager.kt	
++++ b/app/src/main/java/com/focalstudio/focalhub/utils/UsageManager.kt	
+@@ -2,8 +2,9 @@
+ 
+ import android.app.usage.UsageStatsManager
+ import android.content.Context
++import com.focalstudio.focalhub.data.model.UsageRule
+ 
+-fun getAppUsageTimeInSeconds(context: Context, packageName: String, startTime: Long? = null, endTime: Long? = null): Long {
++fun getAppUsageTimeInSeconds(context: Context, packageName: String, startTime: Long? = null, endTime: Long? = null): Int {
+     val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+     val end = endTime ?: System.currentTimeMillis()
+     val start = startTime ?: getStartOfDay()
+@@ -19,6 +20,30 @@
+             totalTime += usageStats.totalTimeInForeground
+         }
+     }
++    return (totalTime / 1000).toInt() // Convert milliseconds to seconds
++}
++
++fun isAppUsagePermittedByUsageRule(usageRule: UsageRule, context: Context) : Boolean {
++    var usageTimeSumInSeconds = 0
++    for (packageName in usageRule.appList) {
++        usageTimeSumInSeconds += getAppUsageTimeInSeconds(context, packageName)
++    }
+ 
+-    return totalTime / 1000 // Convert milliseconds to seconds
+-}
+\ No newline at end of file
++    if(!isUsageStatsPermissionGranted(context)) {
++        log("No usage stats permission granted", " Permission ERROR")
++        return true
++    }
++    // Add more checks...
++    return (usageRule.maxUsageDurationInSeconds >= usageTimeSumInSeconds) || !usageRule.restrictUsageTimePerApp
++}
++
++fun isUsageStatsPermissionGranted(context: Context): Boolean {
++    val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
++    val currentTime = System.currentTimeMillis()
++    val stats = usageStatsManager.queryUsageStats(
++        UsageStatsManager.INTERVAL_DAILY,
++        currentTime - 1000 * 60 * 60,
++        currentTime
++    )
++    return stats.isNotEmpty()
++}
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n    xmlns:tools=\"http://schemas.android.com/tools\">\r\n    <uses-permission android:name=\"android.permission.PACKAGE_USAGE_STATS\"\r\n        tools:ignore=\"ProtectedPermissions\" />\r\n\r\n    <uses-permission\r\n        android:name=\"android.permission.QUERY_ALL_PACKAGES\"\r\n        tools:ignore=\"QueryAllPackagesPermission\" />\r\n    <uses-permission android:name=\"android.permission.REQUEST_DELETE_PACKAGES\" />\r\n    <uses-permission android:name=\"android.permission.EXPAND_STATUS_BAR\" />\r\n\r\n\r\n    <uses-permission android:name=\"android.permission.VIBRATE\" />\r\n\r\n    <application\r\n        android:allowBackup=\"true\"\r\n        android:dataExtractionRules=\"@xml/data_extraction_rules\"\r\n        android:fullBackupContent=\"@xml/backup_rules\"\r\n        android:icon=\"@mipmap/ic_launcher\"\r\n        android:label=\"@string/app_name\"\r\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\r\n        android:supportsRtl=\"true\"\r\n        android:theme=\"@style/Theme.Focalhub\"\r\n        tools:targetApi=\"31\">\r\n        <activity\r\n            android:name=\".view.activities.MainActivity\"\r\n            android:exported=\"true\">\r\n            <intent-filter>\r\n\r\n                <action android:name=\"android.intent.action.MAIN\" />\r\n                <category android:name=\"android.intent.category.LAUNCHER\"/>\r\n                <category android:name=\"android.intent.category.HOME\" />\r\n                <category android:name=\"android.intent.category.DEFAULT\" />\r\n            </intent-filter>\r\n        </activity>\r\n\r\n    </application>\r\n\r\n</manifest>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	
++++ b/app/src/main/AndroidManifest.xml	
+@@ -34,6 +34,10 @@
+                 <category android:name="android.intent.category.DEFAULT" />
+             </intent-filter>
+         </activity>
++        <service
++            android:name=".utils.AppUsageMonitoringService"
++            android:enabled="true"
++            android:exported="false" />
+ 
+     </application>
+ 
+Index: app/src/main/java/com/focalstudio/focalhub/view/activities/MainActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.focalstudio.focalhub.view.activities\r\n\r\nimport android.os.Build\r\nimport android.os.Bundle\r\nimport androidx.activity.ComponentActivity\r\nimport androidx.activity.compose.setContent\r\nimport androidx.annotation.RequiresApi\r\nimport androidx.compose.foundation.layout.fillMaxSize\r\nimport androidx.compose.material3.Surface\r\nimport androidx.compose.ui.Modifier\r\nimport com.focalstudio.focalhub.navigation.Navigation\r\nimport com.focalstudio.focalhub.utils.FocalHubTheme\r\nimport androidx.lifecycle.lifecycleScope\r\n\r\nclass MainActivity : ComponentActivity() {\r\n\r\n    @RequiresApi(Build.VERSION_CODES.O)\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        setContent {\r\n            FocalHubTheme {\r\n                Surface(modifier = Modifier.fillMaxSize()) {\r\n                    Navigation(lifecycleOwner = this@MainActivity)\r\n                }\r\n            }\r\n        }\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/focalstudio/focalhub/view/activities/MainActivity.kt b/app/src/main/java/com/focalstudio/focalhub/view/activities/MainActivity.kt
+--- a/app/src/main/java/com/focalstudio/focalhub/view/activities/MainActivity.kt	
++++ b/app/src/main/java/com/focalstudio/focalhub/view/activities/MainActivity.kt	
+@@ -1,5 +1,6 @@
+ package com.focalstudio.focalhub.view.activities
+ 
++import android.content.Intent
+ import android.os.Build
+ import android.os.Bundle
+ import androidx.activity.ComponentActivity
+@@ -9,8 +10,8 @@
+ import androidx.compose.material3.Surface
+ import androidx.compose.ui.Modifier
+ import com.focalstudio.focalhub.navigation.Navigation
++import com.focalstudio.focalhub.utils.AppUsageMonitoringService
+ import com.focalstudio.focalhub.utils.FocalHubTheme
+-import androidx.lifecycle.lifecycleScope
+ 
+ class MainActivity : ComponentActivity() {
+ 
+@@ -24,5 +25,7 @@
+                 }
+             }
+         }
++        // Start the background service
++        startService(Intent(this, AppUsageMonitoringService::class.java))
+     }
+ }

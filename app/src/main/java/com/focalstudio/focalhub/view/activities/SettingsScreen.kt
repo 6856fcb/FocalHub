@@ -1,5 +1,6 @@
 package com.focalstudio.focalhub.view.activities
 
+import android.view.GestureDetector
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,11 +26,13 @@ import com.focalstudio.focalhub.view.viewModel.SettingsViewModel
 fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel) {
     val generalSettingsList by viewModel.generalSettingsList.collectAsState()
     val accountSettingsList by viewModel.accountSettingsList.collectAsState()
+
+
     viewModel.setNavController(navController)
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("") },
+                title = { Text("Settings") },
                 navigationIcon = { IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }

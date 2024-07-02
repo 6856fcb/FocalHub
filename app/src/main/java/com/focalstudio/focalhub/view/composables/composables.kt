@@ -1,3 +1,4 @@
+
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -23,25 +25,29 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.modifier.modifierLocalConsumer
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.focalstudio.focalhub.data.model.App
-import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.runtime.*
 import androidx.lifecycle.viewModelScope
+import com.chargemap.compose.numberpicker.NumberPicker
+import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.view.viewModel.AppUsageViewModel
+import com.focalstudio.focalhub.view.viewModel.HomeScreenViewModel
 import com.focalstudio.focalhub.view.viewModel.RulesManagerViewModel
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import kotlinx.coroutines.launch
 
 
@@ -275,3 +281,59 @@ fun AppItem(app: App, isSelected: Boolean, onSelect: () -> Unit) {
         Text(app.name)
     }
 }
+
+@Composable
+fun NumberPickerDialog(
+    range: IntRange,
+    pickerValue: Int,
+    onValueChange: (Int) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var currentValue by remember { mutableStateOf(pickerValue) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier.padding(vertical = 16.dp)
+
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = "Set maximum usage duration in minutes")
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                NumberPicker(
+                    value = currentValue,
+                    range = range,
+                    onValueChange = {
+                        currentValue = it
+
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Button(onClick = onDismiss) {
+                        Text("Dismiss")
+                    }
+                    Button(onClick = {
+                        onValueChange(currentValue)
+                        onConfirm()
+                    }) {
+                        Text("Confirm")
+                    }
+                }
+            }
+        }
+    }
+}
+
+

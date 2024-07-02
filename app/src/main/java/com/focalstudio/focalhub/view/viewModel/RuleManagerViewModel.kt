@@ -13,6 +13,8 @@ import androidx.navigation.NavController
 import com.focalstudio.focalhub.data.RuleRepositoryProvider
 import com.focalstudio.focalhub.data.model.App
 import com.focalstudio.focalhub.data.model.DisplayRule
+import com.focalstudio.focalhub.utils.isCurrentTimeBeforeThisTime
+import com.focalstudio.focalhub.utils.shouldDisplayRuleBeCurrentlyActive
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,8 +23,6 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Date
-import com.focalstudio.focalhub.utils.isCurrentTimeBeforeThisTime
-import com.focalstudio.focalhub.utils.shouldDisplayRuleBeCurrentlyActive
 
 @RequiresApi(Build.VERSION_CODES.O)
 class RulesManagerViewModel(application: Application) : AndroidViewModel(application) {
@@ -72,7 +72,7 @@ class RulesManagerViewModel(application: Application) : AndroidViewModel(applica
                         )
                     }
 
-                _appsList.value = apps
+                _appsList.value = apps.filter { it.packageName != "com.focalstudio.focalhub" }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
