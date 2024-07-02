@@ -26,7 +26,7 @@ class AppUsageMonitoringService : Service() {
             while (true) {
 
                 monitorAppUsage()
-                delay(5000) // Check every 5 seconds (Maybe set in settings later on)
+                delay(1000)
             }
         }
         return START_STICKY
@@ -57,24 +57,11 @@ class AppUsageMonitoringService : Service() {
 
         if(currentAppPackage != null) {
             if (!isAppAllowed(currentAppPackage, this)) {
+
                 log("App $currentAppPackage is not allowed", "AppUsageMonitoringService")
                 launchLauncher()
             }
         }
-
-        /*
-        currentAppPackage?.let { appPackageName ->
-            if (appPackageName != lastAppPackage) {
-
-                lastAppPackage = appPackageName
-                if (!isAppAllowed(appPackageName, this)) {
-                    log("App $appPackageName is not allowed", "AppUsageMonitoringService")
-                    launchLauncher()
-                }
-            }
-        }
-        */
-
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -85,11 +72,10 @@ class AppUsageMonitoringService : Service() {
 
     private fun launchLauncher() {
         handler.post {
-
             val launcherIntent = packageManager.getLaunchIntentForPackage("com.focalstudio.focalhub")
             launcherIntent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(launcherIntent)
-            Toast.makeText(applicationContext, "Daily Usage Limit Reached", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(applicationContext, "Daily Usage Limit Reached", Toast.LENGTH_SHORT).show()
         }
     }
 

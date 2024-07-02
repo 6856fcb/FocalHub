@@ -74,13 +74,13 @@ fun RulesManagerScreen(navController: NavController, viewModel: RulesManagerView
         ) {
             item {
                 val color: Color = if (!noActiveRules) {
-                    MaterialTheme.colorScheme.secondary
+                    Color.Black
                 } else {
-                    MaterialTheme.colorScheme.tertiary
+                    Color.LightGray
                 }
                 SettingsMenuLink(
-                    title = { Text(text = "Default Rule", color = MaterialTheme.colorScheme.secondary) },
-                    subtitle = { Text(text = "Show all Apps", color = MaterialTheme.colorScheme.secondary) },
+                    title = { Text(text = "Default Rule", color = color) },
+                    subtitle = { Text(text = "Show all Apps", color = color) },
                     modifier = Modifier,
                     enabled = noActiveRules,
                     icon = {},
@@ -104,7 +104,8 @@ fun RulesManagerScreen(navController: NavController, viewModel: RulesManagerView
                 val color: Color = if ((rule.isDisabled && rule.isRecurring) || !isActive) {
                     Color.LightGray
                 } else {
-                    Color.Black
+                    //Color.Black
+                    MaterialTheme.colorScheme.secondary
                 }
 
                 SettingsMenuLink(

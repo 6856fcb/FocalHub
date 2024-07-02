@@ -123,7 +123,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
         periodicRuleCheckJob = viewModelScope.launch {
             while (true) {
                 loadApps()
-                delay(6000) // Check every 6 seconds
+                delay(3000) // Check every 1 seconds
             }
         }
     }
@@ -165,22 +165,7 @@ class HomeScreenViewModel(application: Application) : AndroidViewModel(applicati
                     }
                     // Linked to display Rule
                     }
-                    /*
-                    else if (usageRule.isLinkedToDisplayRule) {
-                        ruleRepository.getDisplayRuleById(usageRule.linkedRuleId)?.let { rule ->
-                            if (shouldDisplayRuleBeCurrentlyActive(rule)) { // Display Rule is Active
-                                if (rule.isBlacklist) { // If Active + Blacklist -> Do not allow launch
-                                    Toast.makeText(context, "App launch not allowed at the moment", Toast.LENGTH_SHORT).show()
-                                } else { // Active + Whitelist -> Allow Launch
-                                    launchApp(context, app)
-                                }
-                            } else if (rule.isBlacklist) { // Inactive Blacklist -> Allow launch
-                                launchApp(context, app)
-                            }
-                        }
-                        // Apply Constraints -> app, usage rule
-                    }
-                    */
+
                     else {
                         launchApp(context, app)
                     }
